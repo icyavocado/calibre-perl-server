@@ -1,0 +1,24 @@
+<h1>Search</h1>
+  <form method="get" action="/search">
+    <input type="search" name="q" value="[% query | html %]">
+    <button type="submit">Search</button>
+  </form>
+
+  [% IF recent_books.size %]
+  <ul>
+  [% FOREACH book IN recent_books %]
+    [% INCLUDE book_item book=book %]
+  [% END %]
+  </ul>
+  [% ELSE %]
+    <p>No results.</p>
+  [% END %]
+
+  <nav>
+    [% IF has_prev %]
+      <a href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous</a>
+    [% END %]
+    [% IF has_next %]
+      <a href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next</a>
+    [% END %]
+  </nav>

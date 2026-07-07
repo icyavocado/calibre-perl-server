@@ -1,0 +1,11 @@
+<h1>Calibre Perl Server</h1>
+  <form method="get" action="/search">
+    <input type="search" name="q" value="">
+    <button type="submit">Search</button>
+  </form>
+
+  <ul>
+  [% FOREACH book IN recent_books %]
+    [% INCLUDE book_item book=book %]
+  [% END %]
+  </ul>

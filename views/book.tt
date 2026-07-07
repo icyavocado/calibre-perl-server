@@ -1,0 +1,29 @@
+<h1>[% book.title | html %]</h1>
+
+[% IF book.has_cover %]
+  <p><img src="/cover/[% book.id %]" alt="Cover" /></p>
+[% END %]
+
+<p>[% book.authors | html %]</p>
+
+[% IF book.series %]
+  <p>Series: [% book.series | html %][% IF book.series_index %] # [% book.series_index | html %][% END %]</p>
+[% END %]
+
+[% IF tags.size %]
+  <p>Tags: [% FOREACH tag IN tags %][% tag.name | html %][% UNLESS loop.last %], [% END %][% END %]</p>
+[% END %]
+
+[% IF book.comment %]
+  <div>
+    [% book.comment | html %]
+  </div>
+[% END %]
+
+[% IF formats.size %]
+  <ul>
+  [% FOREACH format IN formats %]
+    <li><a href="/download/[% book.id %]/[% format.format | uri %]">[% format.format | html %]</a></li>
+  [% END %]
+  </ul>
+[% END %]

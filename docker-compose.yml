@@ -1,0 +1,8 @@
+services:
+  calibre-perl-server:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /home/dai/CalibreLibrary:/calibre:ro

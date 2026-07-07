@@ -1,0 +1,21 @@
+body {
+  font-family: sans-serif;
+  margin: 2rem;
+  line-height: 1.5;
+}
+
+form {
+  margin-bottom: 1rem;
+}
+
+ul {
+  padding-left: 1.2rem;
+}
+
+.error {
+  color: #b00020;
+}
+
+nav a {
+  margin-right: 1rem;
+}
