@@ -1,11 +1,23 @@
-<h1>Calibre Perl Server</h1>
-  <form method="get" action="/search">
-    <input type="search" name="q" value="">
-    <button type="submit">Search</button>
-  </form>
+<header>
+  <h1>Calibre Perl Server</h1>
+  <p>Browse recent books or search the library.</p>
+</header>
 
+<form method="get" action="/search">
+  <label for="search-query">Search the library</label>
+  <input id="search-query" type="search" name="q" value="" placeholder="Title, author, tag, series">
+  <button type="submit">Search</button>
+</form>
+
+<section>
+  <h2>Recent Books</h2>
+[% IF recent_books.size %]
   <ul>
   [% FOREACH book IN recent_books %]
     [% INCLUDE book_item book=book %]
   [% END %]
   </ul>
+[% ELSE %]
+  <p>No recent books are available.</p>
+[% END %]
+</section>

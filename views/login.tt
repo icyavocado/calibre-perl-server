@@ -1,12 +1,19 @@
-<h1>Login</h1>
+<header>
+  <h1>Login</h1>
+  <p>Sign in to access the library.</p>
+</header>
 
 [% IF error %]
-  <p class="error">[% error | html %]</p>
+  <p><strong>[% error | html %]</strong></p>
 [% END %]
 
 <form method="post" action="/login">
   <input type="hidden" name="return_url" value="[% return_url | html %]">
-  <p><label>Username <input type="text" name="user"></label></p>
-  <p><label>Password <input type="password" name="password"></label></p>
-  <p><button type="submit">Login</button></p>
+  <label for="login-user">Username</label>
+  <input id="login-user" type="text" name="user" autocomplete="username">
+
+  <label for="login-password">Password</label>
+  <input id="login-password" type="password" name="password" autocomplete="current-password">
+
+  <button type="submit">Login</button>
 </form>

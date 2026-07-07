@@ -1,4 +1,8 @@
 <li>
-  <a href="/book/[% book.id %]">[% book.title | html %]</a>
-  <span>[% book.authors | html %]</span>
+  <article>
+    <header>
+      <a href="/book/[% book.id %]">[% book.title | html %]</a>
+    </header>
+    <p>[% book.authors | html %]</p>
+  </article>
 </li>

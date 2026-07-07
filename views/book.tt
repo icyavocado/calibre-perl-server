@@ -1,29 +1,46 @@
-<h1>[% book.title | html %]</h1>
+<article>
+  <header>
+    <h1>[% book.title | html %]</h1>
+    <p>[% book.authors | html %]</p>
+[% IF book.series %]
+    <p><strong>Series:</strong> [% book.series | html %][% IF book.series_index %] #[% book.series_index | html %][% END %]</p>
+[% END %]
+  </header>
 
 [% IF book.has_cover %]
-  <p><img src="/cover/[% book.id %]" alt="Cover" /></p>
-[% END %]
-
-<p>[% book.authors | html %]</p>
-
-[% IF book.series %]
-  <p>Series: [% book.series | html %][% IF book.series_index %] # [% book.series_index | html %][% END %]</p>
+  <figure>
+    <img src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]">
+  </figure>
 [% END %]
 
 [% IF tags.size %]
-  <p>Tags: [% FOREACH tag IN tags %][% tag.name | html %][% UNLESS loop.last %], [% END %][% END %]</p>
+  <section>
+    <h2>Tags</h2>
+    <ul>
+    [% FOREACH tag IN tags %]
+      <li>[% tag.name | html %]</li>
+    [% END %]
+    </ul>
+  </section>
 [% END %]
 
 [% IF book.comment %]
-  <div>
-    [% book.comment | html %]
-  </div>
+  <section>
+    <h2>Description</h2>
+    <div>
+      [% book.comment | html %]
+    </div>
+  </section>
 [% END %]
 
 [% IF formats.size %]
-  <ul>
-  [% FOREACH format IN formats %]
-    <li><a href="/download/[% book.id %]/[% format.format | uri %]">[% format.format | html %]</a></li>
-  [% END %]
-  </ul>
+  <section>
+    <h2>Downloads</h2>
+    <ul>
+    [% FOREACH format IN formats %]
+      <li><a href="/download/[% book.id %]/[% format.format | uri %]">[% format.format | html %]</a></li>
+    [% END %]
+    </ul>
+  </section>
 [% END %]
+</article>

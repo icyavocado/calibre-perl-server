@@ -146,8 +146,9 @@ sub _opds_v2_feed {
 sub _is_public_path {
     my ($path) = @_;
 
-    return 1 if grep { $_ eq $path } qw(/login /logout /favicon.ico /public /app.css);
+    return 1 if grep { $_ eq $path } qw(/login /logout /favicon.ico /public);
     return 1 if $path =~ m{^/opds/v[12](?:/|$)};
+    return 1 if $path =~ m{^/css(?:/|$)};
     return 1 if $path =~ m{^/public(?:/|$)};
 
     return 0;
@@ -168,12 +169,6 @@ hook before => sub {
     return if _is_public_path(request->path_info);
 
     return redirect uri_for('/login', { return_url => request->path_info });
-};
-
-get '/app.css' => sub {
-    my $css = File::Spec->catfile($APP_ROOT, 'public', 'app.css');
-    return pass unless -f $css;
-    return send_file($css, system_path => 1, content_type => 'text/css');
 };
 
 get '/login' => sub {

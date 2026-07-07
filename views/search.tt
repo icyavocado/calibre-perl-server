@@ -1,24 +1,40 @@
-<h1>Search</h1>
-  <form method="get" action="/search">
-    <input type="search" name="q" value="[% query | html %]">
-    <button type="submit">Search</button>
-  </form>
+<header>
+  <h1>Search</h1>
+  <p>Search titles, authors, tags, comments, and series.</p>
+</header>
 
+<form method="get" action="/search">
+  <label for="search-query">Search the library</label>
+  <input id="search-query" type="search" name="q" value="[% query | html %]" placeholder="Title, author, tag, series">
+  <button type="submit">Search</button>
+</form>
+
+[% IF query %]
   [% IF recent_books.size %]
+  <section>
+  <h2>Results for "[% query | html %]"</h2>
   <ul>
   [% FOREACH book IN recent_books %]
     [% INCLUDE book_item book=book %]
   [% END %]
   </ul>
+  </section>
   [% ELSE %]
-    <p>No results.</p>
+    <p>No results for "[% query | html %]".</p>
   [% END %]
+[% ELSE %]
+  <p>Enter a search term to search the library.</p>
+[% END %]
 
-  <nav>
+[% IF has_prev || has_next %]
+  <nav aria-label="Search results pages">
+    <ul>
     [% IF has_prev %]
-      <a href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous</a>
+      <li><a href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous</a></li>
     [% END %]
     [% IF has_next %]
-      <a href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next</a>
+      <li><a href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next</a></li>
     [% END %]
+    </ul>
   </nav>
+  [% END %]
