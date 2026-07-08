@@ -8,3 +8,8 @@ requires 'XML::Writer';
 requires 'JSON::MaybeXS';
 requires 'Plack';
 requires 'Starman';
+
+requires 'Test::More';
+requires 'Plack::Test';
+requires 'HTTP::Request::Common';
+requires 'HTTP::Cookies';

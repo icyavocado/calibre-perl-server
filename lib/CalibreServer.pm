@@ -22,9 +22,9 @@ set public_dir => File::Spec->catdir($APP_ROOT, 'public');
 ## Session engine: explicit, no external secret needed.
 set session => 'Simple';
 
-use constant CALIBRE_ROOT => '/calibre';
-use constant CALIBRE_DB    => '/calibre/metadata.db';
-use constant CALIBRE_USERDB => '/calibre/users.sqlite';
+use constant CALIBRE_ROOT => ($ENV{CALIBRE_ROOT} || '/calibre');
+use constant CALIBRE_DB    => ($ENV{CALIBRE_DB} || '/calibre/metadata.db');
+use constant CALIBRE_USERDB => ($ENV{CALIBRE_USERDB} || '/calibre/users.sqlite');
 
 my $AUTH_ENABLED = -f CALIBRE_USERDB ? 1 : 0;
 my $JSON = JSON::MaybeXS->new->utf8(1);

@@ -86,6 +86,14 @@ Then confirm:
 - `/download/:id/:format` downloads a format file
 - `/opds/v1` and `/opds/v2` require HTTP Basic when auth is enabled
 
+## Test Suite (Fixtures)
+
+Run the small Perl-native integration smoke suite against the fixture library.
+
+```sh
+docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from calibre-perl-server
+```
+
 ## Frontend Cache Busting
 
 Stylesheet URLs include `?v=[% INCLUDE version.tt %]` from `views/version.tt`.

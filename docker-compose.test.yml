@@ -1,0 +1,9 @@
+services:
+  calibre-perl-server:
+    build: .
+    volumes:
+      - .:/app
+      - ./test/fixtures:/fixtures:ro
+    environment:
+      TEST_FIXTURES_ROOT: /fixtures
+    command: ["sh", "-c", "prove -Ilib -It/lib -r t/*.t"]

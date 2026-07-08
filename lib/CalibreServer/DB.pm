@@ -4,8 +4,8 @@ use warnings;
 
 use DBI;
 
-use constant CALIBRE_DB     => '/calibre/metadata.db';
-use constant CALIBRE_USERDB => '/calibre/users.sqlite';
+use constant CALIBRE_DB     => ($ENV{CALIBRE_DB} || '/calibre/metadata.db');
+use constant CALIBRE_USERDB => ($ENV{CALIBRE_USERDB} || '/calibre/users.sqlite');
 
 my %DBH;
 
@@ -77,7 +77,7 @@ sub recent_books {
                 books.title,
                 books.has_cover,
                 books.timestamp,
-                COALESCE(GROUP_CONCAT(authors.name, ', '), '') AS authors
+                COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '') AS authors
             FROM books
             LEFT JOIN books_authors_link ON books.id = books_authors_link.book
             LEFT JOIN authors ON authors.id = books_authors_link.author
@@ -102,7 +102,7 @@ sub all_books {
                 books.title,
                 books.has_cover,
                 books.timestamp,
-                COALESCE(GROUP_CONCAT(authors.name, ', '), '') AS authors
+                COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '') AS authors
             FROM books
             LEFT JOIN books_authors_link ON books.id = books_authors_link.book
             LEFT JOIN authors ON authors.id = books_authors_link.author
@@ -129,7 +129,7 @@ sub search_books {
                 books.title,
                 books.has_cover,
                 books.timestamp,
-                COALESCE(GROUP_CONCAT(DISTINCT authors.name), '') AS authors
+                COALESCE(GROUP_CONCAT(DISTINCT REPLACE(authors.name, '|', ', ')), '') AS authors
             FROM books
             LEFT JOIN books_authors_link ON books.id = books_authors_link.book
             LEFT JOIN authors ON authors.id = books_authors_link.author
@@ -164,7 +164,7 @@ sub book_by_id {
                 books.has_cover,
                 books.timestamp,
                 books.pubdate,
-                COALESCE(GROUP_CONCAT(authors.name, ', '), '') AS authors,
+                COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '') AS authors,
                 COALESCE(series.name, '') AS series,
                 COALESCE(books.series_index, '') AS series_index,
                 COALESCE(comments.text, '') AS comment
