@@ -90,6 +90,25 @@ sub recent_books {
     );
 }
 
+sub all_books {
+    return metadata_db()->selectall_arrayref(
+        q{
+            SELECT
+                books.id,
+                books.title,
+                books.has_cover,
+                books.timestamp,
+                COALESCE(GROUP_CONCAT(authors.name, ', '), '') AS authors
+            FROM books
+            LEFT JOIN books_authors_link ON books.id = books_authors_link.book
+            LEFT JOIN authors ON authors.id = books_authors_link.author
+            GROUP BY books.id
+            ORDER BY books.timestamp DESC, books.id DESC
+        },
+        { Slice => {} },
+    );
+}
+
 sub search_books {
     my ($query, $limit, $offset) = @_;
     $limit  ||= 10;

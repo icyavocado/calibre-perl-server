@@ -216,7 +216,8 @@ get '/' => sub {
     return template 'index' => {
         title        => 'Calibre Perl Server',
         recent_books => CalibreServer::DB::recent_books(10),
-        auth_enabled  => auth_enabled(),
+        books        => CalibreServer::DB::all_books(),
+        auth_enabled => auth_enabled(),
     };
 };
 

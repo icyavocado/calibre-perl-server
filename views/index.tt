@@ -1,6 +1,6 @@
 <header>
   <h1>Calibre Perl Server</h1>
-  <p>Browse recent books or search the library.</p>
+  <p>Browse the library or search the catalog.</p>
 </header>
 
 <form method="get" action="/search">
@@ -19,5 +19,18 @@
   </div>
 [% ELSE %]
   <p>No recent books are available.</p>
+[% END %]
+</section>
+
+<section>
+  <h2>Library</h2>
+[% IF books.size %]
+  <div class="book-grid">
+  [% FOREACH book IN books %]
+    [% INCLUDE book_item.tt book=book %]
+  [% END %]
+  </div>
+[% ELSE %]
+  <p>No books are available.</p>
 [% END %]
 </section>
