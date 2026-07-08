@@ -22,13 +22,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Prepare image tags
+        run: |
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
       - name: Build Docker image
         run: |
           IMAGE="icyavocado/calibre-perl-server"
-          docker build -t "${IMAGE}:latest" -t "${IMAGE}:${{ github.sha::7 }}" .
+          docker build -t "${IMAGE}:latest" -t "${IMAGE}:${SHORT_SHA}" .
 
       - name: Push Docker image
         run: |
           IMAGE="icyavocado/calibre-perl-server"
           docker push "${IMAGE}:latest"
-          docker push "${IMAGE}:${{ github.sha::7 }}"
+          docker push "${IMAGE}:${SHORT_SHA}"
