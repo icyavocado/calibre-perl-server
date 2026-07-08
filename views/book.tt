@@ -36,9 +36,8 @@
 [% IF book.comment %]
   <section>
     <h2>Description</h2>
-    [%# Keep Calibre comments escaped and preserve line breaks for safe readable output. %]
     <div class="book-detail-description">
-      [% book.comment | html %]
+      [% book.comment %]
     </div>
   </section>
 [% END %]

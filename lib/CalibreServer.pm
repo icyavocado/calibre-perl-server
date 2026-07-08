@@ -33,6 +33,14 @@ sub auth_enabled {
     return $AUTH_ENABLED;
 }
 
+sub _request_auth_state {
+    return 'public' unless auth_enabled();
+    return 'authenticated' if session('user');
+    return 'authenticated' if _basic_auth_ok();
+
+    return 'anonymous';
+}
+
 sub _page_number {
     my $value = params->{page} // 1;
     $value = int($value);
@@ -146,10 +154,9 @@ sub _opds_v2_feed {
 sub _is_public_path {
     my ($path) = @_;
 
-    return 1 if grep { $_ eq $path } qw(/login /logout /favicon.ico /public);
+    return 1 if grep { $_ eq $path } qw(/login /logout /favicon.ico /__auth_state);
     return 1 if $path =~ m{^/opds/v[12](?:/|$)};
     return 1 if $path =~ m{^/css(?:/|$)};
-    return 1 if $path =~ m{^/public(?:/|$)};
 
     return 0;
 }
@@ -175,6 +182,12 @@ get '/login' => sub {
     return redirect '/' unless auth_enabled();
 
     return template 'login' => { title => 'Login', return_url => params->{return_url} || '/', error => '' };
+};
+
+any [ 'get', 'head' ] => '/__auth_state' => sub {
+    status 204;
+    response_header 'X-Auth-State' => _request_auth_state();
+    return q{};
 };
 
 post '/login' => sub {

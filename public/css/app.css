@@ -55,10 +55,6 @@
   object-fit: cover;
 }
 
-.book-detail-description {
-  white-space: pre-line;
-}
-
 .book-download-list {
   align-items: center;
 }
