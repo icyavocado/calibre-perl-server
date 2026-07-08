@@ -170,6 +170,11 @@ sub _validate_calibre_library {
 
 _validate_calibre_library();
 
+hook before_template_render => sub {
+    my $tokens = shift;
+    $tokens->{auth_state} = _request_auth_state();
+};
+
 hook before => sub {
     return unless auth_enabled();
     return if session('user');
@@ -213,10 +218,20 @@ post '/logout' => sub {
 };
 
 get '/' => sub {
+    my $page = _page_number();
+    my $per_page = 100;
+    my $offset = ($page - 1) * $per_page;
+    my $books = CalibreServer::DB::all_books($per_page, $offset);
+    my $has_next = @$books > $per_page ? 1 : 0;
+    pop @$books if $has_next;
+
     return template 'index' => {
         title        => 'Calibre Perl Server',
         recent_books => CalibreServer::DB::recent_books(10),
-        books        => CalibreServer::DB::all_books(),
+        books        => $books,
+        page         => $page,
+        has_prev     => $page > 1 ? 1 : 0,
+        has_next     => $has_next,
         auth_enabled => auth_enabled(),
     };
 };

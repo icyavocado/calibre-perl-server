@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta name="cps-auth-state" content="[% auth_state | html %]">
   <title>[% title || 'Calibre Perl Server' %]</title>
+  <meta name="cps-asset-version" content="[% INCLUDE version.tt %]">
   <link rel="stylesheet" href="/css/pico.classless.min.css?v=[% INCLUDE version.tt %]">
   <link rel="stylesheet" href="/css/app.css?v=[% INCLUDE version.tt %]">
 </head>
@@ -12,5 +14,6 @@
   <main>
 [% content %]
   </main>
+  <script src="/js/main.js?v=[% INCLUDE version.tt %]"></script>
 </body>
 </html>

@@ -25,11 +25,28 @@
 <section>
   <h2>Library</h2>
 [% IF books.size %]
+  <p>Page [% page %]</p>
   <div class="book-grid">
   [% FOREACH book IN books %]
     [% INCLUDE book_item.tt book=book %]
   [% END %]
   </div>
+[% IF has_prev || has_next %]
+  <nav aria-label="Library pages">
+    <div class="grid">
+    [% IF has_prev %]
+      <a href="/?page=[% page - 1 %]">Previous page</a>
+    [% ELSE %]
+      <span>At the first page</span>
+    [% END %]
+    [% IF has_next %]
+      <a href="/?page=[% page + 1 %]">Next page</a>
+    [% ELSE %]
+      <span>No more pages</span>
+    [% END %]
+    </div>
+  </nav>
+[% END %]
 [% ELSE %]
   <p>No books are available.</p>
 [% END %]

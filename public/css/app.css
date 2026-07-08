@@ -4,12 +4,34 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.book-card-cover {
-  display: block;
+.book-card-cover-slot,
+.book-detail-cover-slot {
+  display: grid;
   margin-bottom: 0.75rem;
+}
+
+.book-card-cover-slot > *,
+.book-detail-cover-slot > * {
+  grid-area: 1 / 1;
+}
+
+.book-card-cover,
+.book-detail-cover {
+  display: block;
   width: 100%;
   aspect-ratio: 2 / 3;
   object-fit: cover;
+}
+
+.book-card-cover-image,
+.book-detail-cover-image {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.book-card-cover-image.is-loaded,
+.book-detail-cover-image.is-loaded {
+  opacity: 1;
 }
 
 .book-card-title {
@@ -38,7 +60,9 @@
 }
 
 .book-card-cover-placeholder span {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -48,11 +72,7 @@
 }
 
 .book-detail-cover {
-  display: block;
-  width: 100%;
   max-width: 20rem;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
 }
 
 .book-download-list {

@@ -91,6 +91,10 @@ sub recent_books {
 }
 
 sub all_books {
+    my ($limit, $offset) = @_;
+    $limit  ||= 100;
+    $offset ||= 0;
+
     return metadata_db()->selectall_arrayref(
         q{
             SELECT
@@ -104,8 +108,10 @@ sub all_books {
             LEFT JOIN authors ON authors.id = books_authors_link.author
             GROUP BY books.id
             ORDER BY books.timestamp DESC, books.id DESC
+            LIMIT ? OFFSET ?
         },
         { Slice => {} },
+        $limit + 1, $offset,
     );
 }
 

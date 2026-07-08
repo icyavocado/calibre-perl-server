@@ -1,10 +1,16 @@
 <article>
-  <p><a href="/">Back to library</a></p>
+[% USE DATE %]
+  <p><a href="/" data-browser-back data-prefetch-priority="high">Back to library</a></p>
 
   <div class="grid book-detail-grid">
   [% IF book.has_cover %]
     <figure>
-      <img class="book-detail-cover" src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]">
+      <div class="book-detail-cover-slot">
+        <div class="book-detail-cover book-card-cover-placeholder">
+          <span>[% book.title | html %]</span>
+        </div>
+        <img class="book-detail-cover book-detail-cover-image" data-cover-src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]" decoding="async">
+      </div>
     </figure>
   [% END %]
 
@@ -16,7 +22,7 @@
         <p><strong>Series:</strong> [% book.series | html %][% IF book.series_index %] #[% book.series_index | html %][% END %]</p>
 [% END %]
 [% IF book.pubdate %]
-        <p><strong>Published:</strong> [% book.pubdate | html %]</p>
+        <p><strong>Published:</strong> [% DATE.format(book.pubdate, '%B %e, %Y') | html %]</p>
 [% END %]
       </header>
 

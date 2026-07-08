@@ -1,12 +1,13 @@
 <article>
   <a href="/book/[% book.id %]" aria-label="Open [% book.title | html %]">
-  [% IF book.has_cover %]
-    <img class="book-card-cover" src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]" loading="lazy" decoding="async">
-  [% ELSE %]
-    <div class="book-card-cover book-card-cover-placeholder">
+    <div class="book-card-cover-slot">
+      <div class="book-card-cover book-card-cover-placeholder">
       <span>[% book.title | html %]</span>
-    </div>
+      </div>
+  [% IF book.has_cover %]
+      <img class="book-card-cover book-card-cover-image" data-cover-src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]" decoding="async">
   [% END %]
+    </div>
   </a>
   <header>
     <a class="book-card-title" href="/book/[% book.id %]" title="[% book.title | html %]">[% book.title | html %]</a>
