@@ -82,3 +82,9 @@ Then confirm:
 - `/cover/:id` works when the book has a cover
 - `/download/:id/:format` downloads a format file
 - `/opds/v1` and `/opds/v2` require HTTP Basic when auth is enabled
+
+## Frontend Cache Busting
+
+Stylesheet URLs include `?v=[% INCLUDE version.tt %]` from `views/version.tt`.
+
+When frontend CSS changes are not appearing due to browser cache, update `views/version.tt` to a new value.

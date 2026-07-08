@@ -1,16 +1,46 @@
 <article>
-  <header>
-    <h1>[% book.title | html %]</h1>
-    <p>[% book.authors | html %]</p>
-[% IF book.series %]
-    <p><strong>Series:</strong> [% book.series | html %][% IF book.series_index %] #[% book.series_index | html %][% END %]</p>
-[% END %]
-  </header>
+  <p><a href="/">Back to library</a></p>
 
-[% IF book.has_cover %]
-  <figure>
-    <img src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]">
-  </figure>
+  <div class="grid book-detail-grid">
+  [% IF book.has_cover %]
+    <figure>
+      <img class="book-detail-cover" src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]">
+    </figure>
+  [% END %]
+
+    <div>
+      <header>
+        <h1>[% book.title | html %]</h1>
+        <p>[% book.authors | html %]</p>
+[% IF book.series %]
+        <p><strong>Series:</strong> [% book.series | html %][% IF book.series_index %] #[% book.series_index | html %][% END %]</p>
+[% END %]
+[% IF book.pubdate %]
+        <p><strong>Published:</strong> [% book.pubdate | html %]</p>
+[% END %]
+      </header>
+
+[% IF formats.size %]
+      <section>
+        <h2>Downloads</h2>
+        <div class="grid book-download-list">
+        [% FOREACH format IN formats %]
+          <a href="/download/[% book.id %]/[% format.format | uri %]">Download [% format.format | html %]</a>
+        [% END %]
+        </div>
+      </section>
+[% END %]
+    </div>
+  </div>
+
+[% IF book.comment %]
+  <section>
+    <h2>Description</h2>
+    [%# Keep Calibre comments escaped and preserve line breaks for safe readable output. %]
+    <div class="book-detail-description">
+      [% book.comment | html %]
+    </div>
+  </section>
 [% END %]
 
 [% IF tags.size %]
@@ -19,26 +49,6 @@
     <ul>
     [% FOREACH tag IN tags %]
       <li>[% tag.name | html %]</li>
-    [% END %]
-    </ul>
-  </section>
-[% END %]
-
-[% IF book.comment %]
-  <section>
-    <h2>Description</h2>
-    <div>
-      [% book.comment | html %]
-    </div>
-  </section>
-[% END %]
-
-[% IF formats.size %]
-  <section>
-    <h2>Downloads</h2>
-    <ul>
-    [% FOREACH format IN formats %]
-      <li><a href="/download/[% book.id %]/[% format.format | uri %]">[% format.format | html %]</a></li>
     [% END %]
     </ul>
   </section>

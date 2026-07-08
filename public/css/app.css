@@ -1,0 +1,87 @@
+.book-grid {
+  display: grid;
+  gap: var(--pico-spacing);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.book-card-cover {
+  display: block;
+  margin-bottom: 0.75rem;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.book-card-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.book-grid article p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.book-card-cover-placeholder {
+  background: #dbeafe;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.book-card-cover-placeholder span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.book-detail-grid {
+  align-items: start;
+}
+
+.book-detail-cover {
+  display: block;
+  width: 100%;
+  max-width: 20rem;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.book-detail-description {
+  white-space: pre-line;
+}
+
+.book-download-list {
+  align-items: center;
+}
+
+.book-download-list a {
+  display: inline-block;
+}
+
+.login-shell {
+  margin: 0 auto;
+  max-width: 32rem;
+}
+
+.login-error {
+  background: var(--pico-del-background-color);
+  border: 1px solid var(--pico-del-color);
+  border-radius: var(--pico-border-radius);
+  color: var(--pico-del-color);
+  padding: 1rem;
+}
+
+@media (min-width: 900px) {
+  .book-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

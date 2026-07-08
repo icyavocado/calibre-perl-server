@@ -12,11 +12,11 @@
 <section>
   <h2>Recent Books</h2>
 [% IF recent_books.size %]
-  <ul>
+  <div class="book-grid">
   [% FOREACH book IN recent_books %]
-    [% INCLUDE book_item book=book %]
+    [% INCLUDE book_item.tt book=book %]
   [% END %]
-  </ul>
+  </div>
 [% ELSE %]
   <p>No recent books are available.</p>
 [% END %]

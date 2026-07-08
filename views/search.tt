@@ -3,38 +3,70 @@
   <p>Search titles, authors, tags, comments, and series.</p>
 </header>
 
+[%# Keep the main query/result flow readable by moving secondary states into blocks. %]
+[% BLOCK no_results_state %]
+  <section>
+    <header>
+      <h2>No results for "[% query | html %]"</h2>
+      <p>Try a title, author, tag, comment, or series name.</p>
+    </header>
+  </section>
+[% END %]
+
+[% BLOCK start_search_state %]
+  <section>
+    <header>
+      <h2>Start a search</h2>
+      <p>Enter a title, author, tag, comment, or series name.</p>
+    </header>
+  </section>
+[% END %]
+
 <form method="get" action="/search">
   <label for="search-query">Search the library</label>
-  <input id="search-query" type="search" name="q" value="[% query | html %]" placeholder="Title, author, tag, series">
-  <button type="submit">Search</button>
+  <div class="grid">
+    <input id="search-query" type="search" name="q" value="[% query | html %]" placeholder="Title, author, tag, series">
+    <button type="submit">Search</button>
+  </div>
 </form>
 
 [% IF query %]
   [% IF recent_books.size %]
   <section>
-  <h2>Results for "[% query | html %]"</h2>
-  <ul>
+  <header>
+    <h2>Results for "[% query | html %]"</h2>
+    <p>Page [% page %]</p>
+  </header>
+  <div class="book-grid">
   [% FOREACH book IN recent_books %]
-    [% INCLUDE book_item book=book %]
+    [% INCLUDE book_item.tt book=book %]
   [% END %]
-  </ul>
+  </div>
   </section>
   [% ELSE %]
-    <p>No results for "[% query | html %]".</p>
+  [% PROCESS no_results_state %]
   [% END %]
 [% ELSE %]
-  <p>Enter a search term to search the library.</p>
+  [% PROCESS start_search_state %]
 [% END %]
 
 [% IF has_prev || has_next %]
   <nav aria-label="Search results pages">
-    <ul>
+    <header>
+      <h2>Pages</h2>
+      <p>Current page: [% page %]</p>
+    </header>
+    <div class="grid">
     [% IF has_prev %]
-      <li><a href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous</a></li>
+      <a href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous page</a>
+    [% ELSE %]
+      <span>At the first page</span>
     [% END %]
     [% IF has_next %]
-      <li><a href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next</a></li>
+      <a href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next page</a>
+    [% ELSE %]
+      <span>No more pages</span>
     [% END %]
-    </ul>
+    </div>
   </nav>
-  [% END %]
+[% END %]

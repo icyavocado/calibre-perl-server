@@ -16,8 +16,8 @@ set layout => 'main';
 
 my $APP_ROOT = abs_path(File::Spec->catdir(dirname(__FILE__), '..'));
 
-set views   => File::Spec->catdir($APP_ROOT, 'views');
-set public  => File::Spec->catdir($APP_ROOT, 'public');
+set views      => File::Spec->catdir($APP_ROOT, 'views');
+set public_dir => File::Spec->catdir($APP_ROOT, 'public');
 
 ## Session engine: explicit, no external secret needed.
 set session => 'Simple';

@@ -1,19 +1,22 @@
-<header>
-  <h1>Login</h1>
-  <p>Sign in to access the library.</p>
-</header>
+<article class="login-shell">
+  <header>
+    <h1>Login</h1>
+    <p>Sign in to access the library.</p>
+  </header>
 
 [% IF error %]
-  <p><strong>[% error | html %]</strong></p>
+  <p class="login-error"><strong>[% error | html %]</strong></p>
 [% END %]
 
-<form method="post" action="/login">
-  <input type="hidden" name="return_url" value="[% return_url | html %]">
-  <label for="login-user">Username</label>
-  <input id="login-user" type="text" name="user" autocomplete="username">
+  <form method="post" action="/login">
+    <input type="hidden" name="return_url" value="[% return_url | html %]">
 
-  <label for="login-password">Password</label>
-  <input id="login-password" type="password" name="password" autocomplete="current-password">
+    <label for="login-user">Username</label>
+    <input id="login-user" type="text" name="user" autocomplete="username">
 
-  <button type="submit">Login</button>
-</form>
+    <label for="login-password">Password</label>
+    <input id="login-password" type="password" name="password" autocomplete="current-password">
+
+    <button type="submit">Login</button>
+  </form>
+</article>

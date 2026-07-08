@@ -1,8 +1,0 @@
-<li>
-  <article>
-    <header>
-      <a href="/book/[% book.id %]">[% book.title | html %]</a>
-    </header>
-    <p>[% book.authors | html %]</p>
-  </article>
-</li>
