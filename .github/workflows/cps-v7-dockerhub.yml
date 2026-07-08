@@ -1,0 +1,34 @@
+name: build-release cps-v7
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fixture smoke tests (Docker)
+        run: |
+          docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from calibre-perl-server
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          IMAGE="icyavocado/calibre-perl-server"
+          docker build -t "${IMAGE}:latest" -t "${IMAGE}:${{ github.sha::7 }}" .
+
+      - name: Push Docker image
+        run: |
+          IMAGE="icyavocado/calibre-perl-server"
+          docker push "${IMAGE}:latest"
+          docker push "${IMAGE}:${{ github.sha::7 }}"
