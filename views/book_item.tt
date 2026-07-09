@@ -5,7 +5,7 @@
       <span>[% book.title | html %]</span>
       </div>
   [% IF book.has_cover && auth_state != 'anonymous' %]
-      <img class="book-card-cover book-card-cover-image" src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]" loading="lazy" decoding="async">
+      <img class="book-card-cover book-card-cover-image" src="/cover/[% book.id %]/thumb" alt="Cover for [% book.title | html %]" loading="lazy" decoding="async">
   [% END %]
     </div>
   </a>

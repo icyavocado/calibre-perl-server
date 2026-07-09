@@ -9,7 +9,8 @@ RUN apt-get update \
      build-essential \
      ca-certificates \
      cpm \
-  && rm -rf /var/lib/apt/lists/*
+     libvips-tools \
+   && rm -rf /var/lib/apt/lists/*
 
 COPY . /app
 

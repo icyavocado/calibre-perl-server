@@ -37,6 +37,10 @@ subtest 'auth disabled' => sub {
         my $res_cover = $cb->(GET '/cover/1');
         is($res_cover->code, 200, 'GET /cover/1 returns 200');
 
+        my $res_cover_thumb = $cb->(GET '/cover/1/thumb');
+        is($res_cover_thumb->code, 200, 'GET /cover/1/thumb returns 200');
+        like($res_cover_thumb->header('Content-Type') // q{}, qr{image/jpeg}, 'cover thumb is jpeg');
+
         my $res_download = $cb->(GET '/download/1/EPUB');
         is($res_download->code, 200, 'GET /download/1/EPUB returns 200');
         like($res_download->header('Content-Disposition') // q{}, qr/attachment/i, 'download uses attachment disposition');

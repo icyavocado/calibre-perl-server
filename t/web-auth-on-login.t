@@ -55,6 +55,11 @@ subtest 'auth enabled, logged in' => sub {
         my $res_cover = $cb->($req_cover);
         is($res_cover->code, 200, 'GET /cover/1 returns 200 after login');
 
+        my $req_cover_thumb = GET '/cover/1/thumb';
+        $req_cover_thumb->header('Cookie' => $cookie_header);
+        my $res_cover_thumb = $cb->($req_cover_thumb);
+        is($res_cover_thumb->code, 200, 'GET /cover/1/thumb returns 200 after login');
+
         my $req_download = GET '/download/1/EPUB';
         $req_download->header('Cookie' => $cookie_header);
         my $res_download = $cb->($req_download);

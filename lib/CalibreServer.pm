@@ -5,6 +5,7 @@ use Cwd qw(abs_path);
 use HTML::Entities qw(encode_entities);
 use File::Spec;
 use File::Basename qw(dirname);
+use File::Path qw(make_path);
 require JSON::MaybeXS;
 use MIME::Base64 qw(decode_base64);
 use XML::Writer;
@@ -25,9 +26,55 @@ set session => 'Simple';
 use constant CALIBRE_ROOT => ($ENV{CALIBRE_ROOT} || '/calibre');
 use constant CALIBRE_DB    => ($ENV{CALIBRE_DB} || '/calibre/metadata.db');
 use constant CALIBRE_USERDB => ($ENV{CALIBRE_USERDB} || '/calibre/users.sqlite');
+use constant CPS_COVER_CACHE => ($ENV{CPS_COVER_CACHE} || '/tmp/cps-cover-cache');
 
 my $AUTH_ENABLED = -f CALIBRE_USERDB ? 1 : 0;
 my $JSON = JSON::MaybeXS->new->utf8(1);
+my %COVER_VARIANTS = (
+    thumb  => { size => '240x360', quality => 75 },
+    medium => { size => '640x960', quality => 80 },
+);
+
+sub _cover_variant_cache_file {
+    my ($book_id, $variant) = @_;
+    return unless exists $COVER_VARIANTS{$variant};
+    return unless defined $book_id && $book_id =~ /^\d+$/;
+
+    my $dir = File::Spec->catdir(CPS_COVER_CACHE, $book_id);
+    make_path($dir) unless -d $dir;
+
+    return File::Spec->catfile($dir, "$variant.jpg");
+}
+
+sub _book_cover_file {
+    my ($book) = @_;
+    return unless $book && $book->{has_cover};
+
+    my $cover = File::Spec->catfile(CALIBRE_ROOT, $book->{path}, 'cover.jpg');
+    my $real_cover = abs_path($cover) or return;
+    return unless index($real_cover, CALIBRE_ROOT) == 0;
+    return unless -f $real_cover;
+
+    return $real_cover;
+}
+
+sub _ensure_cover_variant {
+    my ($source, $book_id, $variant) = @_;
+    my $spec = $COVER_VARIANTS{$variant} or return;
+    my $target = _cover_variant_cache_file($book_id, $variant) or return;
+    return $target if -f $target;
+
+    my $tmp = "$target.$$.tmp";
+    my $output = "$tmp\[Q=$spec->{quality}\]";
+    open my $old_stderr, '>&', \*STDERR;
+    open STDERR, '>', File::Spec->devnull;
+    my $ok = system('vipsthumbnail', $source, '-s', $spec->{size}, '-o', $output) == 0;
+    open STDERR, '>&', $old_stderr;
+    return unless $ok && -f $tmp;
+    rename $tmp, $target or return;
+
+    return $target;
+}
 
 sub auth_enabled {
     return $AUTH_ENABLED;
@@ -270,14 +317,21 @@ get '/book/:id' => sub {
 get '/cover/:id' => sub {
     my $book_id = route_parameters->get('id');
     my $book = CalibreServer::DB::book_by_id($book_id) or pass;
-    return pass unless $book->{has_cover};
-
-    my $cover = File::Spec->catfile(CALIBRE_ROOT, $book->{path}, 'cover.jpg');
-    my $real_cover = abs_path($cover) or pass;
-    return pass unless index($real_cover, CALIBRE_ROOT) == 0;
-    return pass unless -f $real_cover;
+    my $real_cover = _book_cover_file($book) or pass;
 
     return send_file($real_cover, system_path => 1, content_type => 'image/jpeg');
+};
+
+get '/cover/:id/:variant' => sub {
+    my $book_id = route_parameters->get('id');
+    my $variant = route_parameters->get('variant') // q{};
+    return pass unless exists $COVER_VARIANTS{$variant};
+
+    my $book = CalibreServer::DB::book_by_id($book_id) or pass;
+    my $real_cover = _book_cover_file($book) or pass;
+    my $variant_file = _ensure_cover_variant($real_cover, $book_id, $variant) || $real_cover;
+
+    return send_file($variant_file, system_path => 1, content_type => 'image/jpeg');
 };
 
 sub _mime_for_format {
