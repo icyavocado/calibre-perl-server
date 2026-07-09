@@ -23,17 +23,6 @@
   object-fit: cover;
 }
 
-.book-card-cover-image,
-.book-detail-cover-image {
-  opacity: 0;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.book-card-cover-image.is-loaded,
-.book-detail-cover-image.is-loaded {
-  opacity: 1;
-}
-
 .book-card-title {
   display: -webkit-box;
   -webkit-box-orient: vertical;

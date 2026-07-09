@@ -3,13 +3,13 @@
   <p><a href="/" data-browser-back data-prefetch-priority="high">Back to library</a></p>
 
   <div class="grid book-detail-grid">
-  [% IF book.has_cover %]
+  [% IF book.has_cover && auth_state != 'anonymous' %]
     <figure>
       <div class="book-detail-cover-slot">
         <div class="book-detail-cover book-card-cover-placeholder">
           <span>[% book.title | html %]</span>
         </div>
-        <img class="book-detail-cover book-detail-cover-image" data-cover-src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]" decoding="async">
+        <img class="book-detail-cover book-detail-cover-image" src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]" loading="lazy" decoding="async" fetchpriority="high">
       </div>
     </figure>
   [% END %]

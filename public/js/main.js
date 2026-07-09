@@ -7,18 +7,10 @@
     htmlCache: new Map(),
     htmlRequests: new Map(),
     dbPromise: null,
-    coverQueue: [],
-    coverQueueActive: 0,
-    coverErrorCount: 0,
-    coverQueueDisabled: false,
-    coverQueueStarted: false,
   };
 
   const pageLinkSelector = 'a[href]';
   const browserBackSelector = 'a[data-browser-back]';
-  const coverImageSelector = '.book-card-cover-image[data-cover-src], .book-detail-cover-image[data-cover-src]';
-  const coverQueueConcurrency = 4;
-  const coverQueueErrorLimit = 5;
   const assetVersion = document.querySelector('meta[name="cps-asset-version"]')?.content || '0';
 
   function pageAuthState() {
@@ -314,125 +306,6 @@
     return { priorityLinks, normalLinks };
   }
 
-  function distanceFromViewport(element) {
-    const rect = element.getBoundingClientRect();
-
-    if (rect.bottom > 0 && rect.top < window.innerHeight) {
-      return 0;
-    }
-
-    if (rect.top >= window.innerHeight) {
-      return rect.top - window.innerHeight;
-    }
-
-    return Math.abs(rect.bottom);
-  }
-
-  function isCoverReady(image) {
-    return image.classList.contains('is-loaded') || image.dataset.coverState === 'loading' || image.dataset.coverState === 'error';
-  }
-
-  function markCoverLoaded(image) {
-    image.classList.add('is-loaded');
-    image.dataset.coverState = 'loaded';
-  }
-
-  function loadCoverImage(image) {
-    const src = image.dataset.coverSrc;
-    if (!src || isCoverReady(image) || state.coverQueueDisabled) {
-      return Promise.resolve();
-    }
-
-    image.dataset.coverState = 'loading';
-
-    return new Promise((resolve) => {
-      const finalize = (didLoad) => {
-        if (didLoad) {
-          markCoverLoaded(image);
-        } else {
-          image.dataset.coverState = 'error';
-          state.coverErrorCount += 1;
-          if (state.coverErrorCount >= coverQueueErrorLimit) {
-            state.coverQueueDisabled = true;
-            state.coverQueue.length = 0;
-          }
-        }
-
-        resolve();
-      };
-
-      image.addEventListener('load', () => finalize(true), { once: true });
-      image.addEventListener('error', () => finalize(false), { once: true });
-      image.src = src;
-
-      if (image.complete) {
-        finalize(image.naturalWidth > 0);
-      }
-    });
-  }
-
-  function enqueueCover(image) {
-    if (state.coverQueueDisabled || !image || isCoverReady(image) || state.coverQueue.includes(image)) {
-      return;
-    }
-
-    state.coverQueue.push(image);
-  }
-
-  function sortCoverQueue() {
-    state.coverQueue.sort((left, right) => distanceFromViewport(left) - distanceFromViewport(right));
-  }
-
-  function pumpCoverQueue() {
-    if (state.coverQueueDisabled || !state.coverQueue.length || state.coverQueueActive >= coverQueueConcurrency) {
-      return;
-    }
-
-    sortCoverQueue();
-
-    while (state.coverQueue.length && state.coverQueueActive < coverQueueConcurrency) {
-      const image = state.coverQueue.shift();
-      if (!image || isCoverReady(image)) {
-        continue;
-      }
-
-      state.coverQueueActive += 1;
-      loadCoverImage(image)
-        .finally(() => {
-          state.coverQueueActive -= 1;
-          pumpCoverQueue();
-        });
-    }
-  }
-
-  function initCoverQueue() {
-    if (state.coverQueueStarted) {
-      return;
-    }
-
-    state.coverQueueStarted = true;
-
-    const images = Array.from(document.querySelectorAll(coverImageSelector));
-    const visibleImages = [];
-    const offscreenImages = [];
-
-    images.forEach((image) => {
-      if (isVisible(image)) {
-        visibleImages.push(image);
-        return;
-      }
-
-      offscreenImages.push(image);
-    });
-
-    visibleImages.forEach(enqueueCover);
-    offscreenImages.forEach(enqueueCover);
-    pumpCoverQueue();
-
-    window.addEventListener('scroll', pumpCoverQueue, { passive: true });
-    window.addEventListener('resize', pumpCoverQueue);
-  }
-
   function wirePreloadIntent(link) {
     const href = getCacheableHref(link);
     if (!href) {
@@ -521,7 +394,6 @@
     document.addEventListener('click', reusePrefetchedHtml);
     const { priorityLinks, normalLinks } = collectVisibleLinks();
     await Promise.all(priorityLinks.map((href) => preloadHtml(href)));
-    initCoverQueue();
     normalLinks.forEach((href) => {
       preloadHtml(href);
     });

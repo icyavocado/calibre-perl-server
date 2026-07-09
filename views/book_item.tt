@@ -4,8 +4,8 @@
       <div class="book-card-cover book-card-cover-placeholder">
       <span>[% book.title | html %]</span>
       </div>
-  [% IF book.has_cover %]
-      <img class="book-card-cover book-card-cover-image" data-cover-src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]" decoding="async">
+  [% IF book.has_cover && auth_state != 'anonymous' %]
+      <img class="book-card-cover book-card-cover-image" src="/cover/[% book.id %]" alt="Cover for [% book.title | html %]" loading="lazy" decoding="async">
   [% END %]
     </div>
   </a>
