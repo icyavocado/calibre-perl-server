@@ -34,6 +34,7 @@ my %COVER_VARIANTS = (
     thumb  => { size => '240x360', quality => 75 },
     medium => { size => '640x960', quality => 80 },
 );
+my $EREADER_UA_RE = qr/(?:kindle|kobo|pocketbook|boox|onyx|eink|e-ink|ereader)/i;
 
 sub _cover_variant_cache_file {
     my ($book_id, $variant) = @_;
@@ -86,6 +87,41 @@ sub _request_auth_state {
     return 'authenticated' if _basic_auth_ok();
 
     return 'anonymous';
+}
+
+sub _apply_reader_view_preference {
+    my $view = lc(params->{view} // q{});
+    return session reader_view => 'reader' if $view eq 'reader';
+    return session reader_view => 'normal' if $view eq 'normal';
+
+    return;
+}
+
+sub _is_ereader_user_agent {
+    my $user_agent = request->header('User-Agent') // q{};
+    return $user_agent =~ $EREADER_UA_RE ? 1 : 0;
+}
+
+sub _reader_view_active {
+    _apply_reader_view_preference();
+
+    my $preference = session('reader_view') // q{};
+    return 1 if $preference eq 'reader';
+    return 0 if $preference eq 'normal';
+
+    return _is_ereader_user_agent();
+}
+
+sub _with_formats {
+    my ($books) = @_;
+
+    return [
+        map {
+            my %book = %$_;
+            $book{formats} = CalibreServer::DB::formats_for_book($book{id});
+            \%book;
+        } @$books
+    ];
 }
 
 sub _page_number {
@@ -220,9 +256,12 @@ _validate_calibre_library();
 hook before_template_render => sub {
     my $tokens = shift;
     $tokens->{auth_state} = _request_auth_state();
+    $tokens->{reader_mode} = _reader_view_active();
 };
 
 hook before => sub {
+    _apply_reader_view_preference();
+
     return unless auth_enabled();
     return if session('user');
     return if _is_public_path(request->path_info);
@@ -239,6 +278,7 @@ get '/login' => sub {
 any [ 'get', 'head' ] => '/__auth_state' => sub {
     status 204;
     response_header 'X-Auth-State' => _request_auth_state();
+    response_header 'X-Reader-Mode' => _reader_view_active() ? 'reader' : 'normal';
     return q{};
 };
 
@@ -265,25 +305,33 @@ post '/logout' => sub {
 };
 
 get '/' => sub {
+    my $reader_mode = _reader_view_active();
     my $page = _page_number();
     my $per_page = 100;
     my $offset = ($page - 1) * $per_page;
     my $books = CalibreServer::DB::all_books($per_page, $offset);
+    my $recent_books = CalibreServer::DB::recent_books(10);
     my $has_next = @$books > $per_page ? 1 : 0;
     pop @$books if $has_next;
 
-    return template 'index' => {
+    if ($reader_mode) {
+        $recent_books = _with_formats($recent_books);
+        $books = _with_formats($books);
+    }
+
+    return template($reader_mode ? 'index_reader' : 'index', {
         title        => 'Calibre Perl Server',
-        recent_books => CalibreServer::DB::recent_books(10),
+        recent_books => $recent_books,
         books        => $books,
         page         => $page,
         has_prev     => $page > 1 ? 1 : 0,
         has_next     => $has_next,
         auth_enabled => auth_enabled(),
-    };
+    });
 };
 
 get '/search' => sub {
+    my $reader_mode = _reader_view_active();
     my $query = params->{q} // q{};
     my $page = _page_number();
     my $per_page = 10;
@@ -292,14 +340,16 @@ get '/search' => sub {
     my $has_next = @$rows > $per_page ? 1 : 0;
     pop @$rows if $has_next;
 
-    return template 'search' => {
+    $rows = _with_formats($rows) if $reader_mode;
+
+    return template($reader_mode ? 'search_reader' : 'search', {
         title        => 'Search',
         query        => $query,
         page         => $page,
         has_prev     => $page > 1 ? 1 : 0,
         has_next     => $has_next,
         recent_books => $rows,
-    };
+    });
 };
 
 get '/book/:id' => sub {

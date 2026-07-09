@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="cps-auth-state" content="[% auth_state | html %]">
+  <meta name="cps-reader-mode" content="[% IF reader_mode %]reader[% ELSE %]normal[% END %]">
   <title>[% title || 'Calibre Perl Server' %]</title>
   <meta name="cps-asset-version" content="[% INCLUDE version.tt %]">
   <link rel="stylesheet" href="/css/pico.classless.min.css?v=[% INCLUDE version.tt %]">

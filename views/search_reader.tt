@@ -1,0 +1,63 @@
+<header>
+  <h1>Search</h1>
+  <p><a href="/?view=normal">View normal site</a></p>
+</header>
+
+<form method="get" action="/search">
+  <label for="search-query">Search the library</label>
+  <input id="search-query" type="search" name="q" value="[% query | html %]" placeholder="Title or author">
+  <button type="submit">Search</button>
+</form>
+
+[% BLOCK reader_book %]
+  <article>
+    <h3>[% book.title | html %]</h3>
+    <p>[% book.authors | html %]</p>
+  [% IF book.formats.size %]
+    <p>
+    [% FOREACH format IN book.formats %]
+      <a href="/download/[% book.id %]/[% format.format | uri %]">[% format.format | html %]</a>[% UNLESS loop.last %] | [% END %]
+    [% END %]
+    </p>
+  [% ELSE %]
+    <p>No downloads available.</p>
+  [% END %]
+  </article>
+[% END %]
+
+[% IF query %]
+  [% IF recent_books.size %]
+  <section>
+    <h2>Results for "[% query | html %]"</h2>
+    <p>Page [% page %]</p>
+    [% FOREACH book IN recent_books %]
+      [% PROCESS reader_book book=book %]
+    [% END %]
+  </section>
+  [% ELSE %]
+  <section>
+    <h2>No results for "[% query | html %]"</h2>
+    <p>Try a title, author, tag, comment, or series name.</p>
+  </section>
+  [% END %]
+[% ELSE %]
+  <section>
+    <h2>Start a search</h2>
+    <p>Enter a title, author, tag, comment, or series name.</p>
+  </section>
+[% END %]
+
+[% IF has_prev || has_next %]
+  <nav aria-label="Search results pages">
+    [% IF has_prev %]
+      <a href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous page</a>
+    [% ELSE %]
+      <span>At the first page</span>
+    [% END %]
+    [% IF has_next %]
+      <a href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next page</a>
+    [% ELSE %]
+      <span>No more pages</span>
+    [% END %]
+  </nav>
+[% END %]

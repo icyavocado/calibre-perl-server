@@ -1,23 +1,36 @@
 <header>
   <h1>Calibre Perl Server</h1>
-  <p>Browse the library or search the catalog.</p>
-  <p><a href="/?view=reader">View library from e-reader</a></p>
+  <p><a href="/?view=normal">View normal site</a></p>
 </header>
 
 <form method="get" action="/search">
   <label for="search-query">Search the library</label>
-  <input id="search-query" type="search" name="q" value="" placeholder="Title, author, tag, series">
+  <input id="search-query" type="search" name="q" value="" placeholder="Title or author">
   <button type="submit">Search</button>
 </form>
+
+[% BLOCK reader_book %]
+  <article>
+    <h3>[% book.title | html %]</h3>
+    <p>[% book.authors | html %]</p>
+  [% IF book.formats.size %]
+    <p>
+    [% FOREACH format IN book.formats %]
+      <a href="/download/[% book.id %]/[% format.format | uri %]">[% format.format | html %]</a>[% UNLESS loop.last %] | [% END %]
+    [% END %]
+    </p>
+  [% ELSE %]
+    <p>No downloads available.</p>
+  [% END %]
+  </article>
+[% END %]
 
 <section>
   <h2>Recent Books</h2>
 [% IF recent_books.size %]
-  <div class="book-grid">
   [% FOREACH book IN recent_books %]
-    [% INCLUDE book_item.tt book=book %]
+    [% PROCESS reader_book book=book %]
   [% END %]
-  </div>
 [% ELSE %]
   <p>No recent books are available.</p>
 [% END %]
@@ -27,14 +40,11 @@
   <h2>Library</h2>
 [% IF books.size %]
   <p>Page [% page %]</p>
-  <div class="book-grid">
   [% FOREACH book IN books %]
-    [% INCLUDE book_item.tt book=book %]
+    [% PROCESS reader_book book=book %]
   [% END %]
-  </div>
 [% IF has_prev || has_next %]
   <nav aria-label="Library pages">
-    <div class="grid">
     [% IF has_prev %]
       <a href="/?page=[% page - 1 %]">Previous page</a>
     [% ELSE %]
@@ -45,7 +55,6 @@
     [% ELSE %]
       <span>No more pages</span>
     [% END %]
-    </div>
   </nav>
 [% END %]
 [% ELSE %]
