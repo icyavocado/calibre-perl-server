@@ -56,7 +56,7 @@ map $status $cover_cache_control {
 
 location /cover/ {
   auth_request /__auth_state;
-  auth_request_set $auth_state $sent_http_x_auth_state;
+  auth_request_set $auth_state $upstream_http_x_auth_state;
 
   proxy_cache calibre_cache;
   proxy_cache_methods GET HEAD;
@@ -93,10 +93,10 @@ map "$http_authorization:$http_cookie" $needs_auth_state_backend {
 }
 ```
 
-Use `$sent_http_x_auth_state` for `auth_request_set` so both local nginx responses and proxied app responses can populate the auth state:
+Use `$upstream_http_x_auth_state` for proxied app auth responses. Nginx-local anonymous fast-path responses fall back to the auth bucket map's default `anonymous` value:
 
 ```nginx
-auth_request_set $auth_state $sent_http_x_auth_state;
+auth_request_set $auth_state $upstream_http_x_auth_state;
 ```
 
 ```nginx
