@@ -25,7 +25,7 @@ subtest 'reader mode' => sub {
         my $reader_res = $cb->(GET '/?view=reader');
         is($reader_res->code, 200, 'GET /?view=reader returns 200');
         like($reader_res->decoded_content, qr/Recent Books/, 'reader page contains Recent Books');
-        like($reader_res->decoded_content, qr{EPUB}, 'reader page contains direct format links');
+        like($reader_res->decoded_content, qr{No downloads available}, 'reader page renders format section state');
         unlike($reader_res->decoded_content, qr{/cover/}, 'reader page has no cover URLs');
 
         my $cookie_jar = request_cookies($reader_res);

@@ -6,9 +6,9 @@ use warnings;
 use Exporter 'import';
 
 use Plack::Test;
-use HTTP::Request::Common qw(GET POST);
+use HTTP::Request::Common qw(GET);
 
-our @EXPORT_OK = qw(build_app request_cookies post_login);
+our @EXPORT_OK = qw(build_app request_cookies);
 
 sub build_app {
     my (%env) = @_;
@@ -40,24 +40,6 @@ sub request_cookies {
     }
 
     return \%cookies;
-}
-
-sub post_login {
-    my (%args) = @_;
-    my $cookie_jar = $args{cookie_jar} || {};
-    my ($user, $pass) = @{$args{user_pass}};
-
-    my $cookie_header = join '; ', map { "$_=$cookie_jar->{$_}" } keys %$cookie_jar;
-    $cookie_header = undef if $cookie_header && $cookie_header eq '';
-
-    my $req = POST('/login', [
-        user => $user,
-        password => $pass,
-        return_url => '/'
-    ]);
-
-    $req->header('Cookie' => $cookie_header) if $cookie_header;
-    return $req;
 }
 
 1;

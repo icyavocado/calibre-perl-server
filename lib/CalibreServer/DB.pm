@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 use DBI;
+use DBD::SQLite ();
 
 use constant CALIBRE_DB     => ($ENV{CALIBRE_DB} || '/calibre/metadata.db');
 use constant CALIBRE_USERDB => ($ENV{CALIBRE_USERDB} || '/calibre/users.sqlite');
@@ -16,14 +17,16 @@ sub _connect {
     die "database is not readable: $path\n" unless -r $path;
 
     return DBI->connect(
-        "dbi:SQLite:dbname=$path;sqlite_open_flags=SQLITE_OPEN_READONLY",
+        "dbi:SQLite:dbname=$path",
         undef,
         undef,
         {
             RaiseError => 1,
             PrintError  => 0,
             AutoCommit  => 1,
+            ReadOnly => 1,
             sqlite_unicode => 1,
+            sqlite_open_flags => DBD::SQLite::OPEN_READONLY(),
         },
     );
 }

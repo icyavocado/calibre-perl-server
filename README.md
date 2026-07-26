@@ -24,12 +24,11 @@ Start the server:
 docker compose up
 ```
 
-The public entrypoint is nginx on `http://localhost:5000`.
-The Perl app stays behind nginx on the internal compose network.
+The public entrypoint is the Perl app on `http://localhost:5000`.
 
 ## Auth
 
-If `/calibre/users.sqlite` exists, the app requires login.
+If `/calibre/users.sqlite` exists, the app requires HTTP Basic auth.
 
 Create or manage users with Calibre:
 
@@ -48,8 +47,6 @@ Web:
 - `/book/:id`
 - `/cover/:id`
 - `/download/:id/:format`
-- `/login`
-- `/logout`
 
 OPDS:
 
@@ -100,16 +97,6 @@ Stylesheet URLs include `?v=[% INCLUDE version.tt %]` from `views/version.tt`.
 
 When frontend CSS changes are not appearing due to browser cache, update `views/version.tt` to a new value.
 
-## nginx
+## Runtime
 
-nginx serves static files from `public/` directly and proxies dynamic app routes to the Perl app.
-
-Current nginx responsibilities:
-
-- serve static assets under `public/`
-- gzip compress text responses
-- add cache headers for static assets
-- proxy dynamic routes to the Perl app
-- maintain separate proxy-cache buckets for anonymous and authenticated read-only traffic
-
-The app remains responsible for auth decisions, downloads, covers, and all dynamic route behavior.
+The app is served directly by Starman on port `5000` in Docker Compose.

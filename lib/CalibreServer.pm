@@ -1,11 +1,10 @@
 package CalibreServer;
 use Dancer2;
-use Dancer2::Plugin::Auth::Tiny;
 use Cwd qw(abs_path);
-use HTML::Entities qw(encode_entities);
 use File::Spec;
 use File::Basename qw(dirname);
 use File::Path qw(make_path);
+use URI::Escape qw(uri_escape_utf8);
 require JSON::MaybeXS;
 use MIME::Base64 qw(decode_base64);
 use XML::Writer;
@@ -19,8 +18,8 @@ my $APP_ROOT = abs_path(File::Spec->catdir(dirname(__FILE__), '..'));
 
 set views      => File::Spec->catdir($APP_ROOT, 'views');
 set public_dir => File::Spec->catdir($APP_ROOT, 'public');
+set charset    => 'UTF-8';
 
-## Session engine: explicit, no external secret needed.
 set session => 'Simple';
 
 use constant CALIBRE_ROOT => ($ENV{CALIBRE_ROOT} || '/calibre');
@@ -28,13 +27,25 @@ use constant CALIBRE_DB    => ($ENV{CALIBRE_DB} || '/calibre/metadata.db');
 use constant CALIBRE_USERDB => ($ENV{CALIBRE_USERDB} || '/calibre/users.sqlite');
 use constant CPS_COVER_CACHE => ($ENV{CPS_COVER_CACHE} || '/tmp/cps-cover-cache');
 
-my $AUTH_ENABLED = -f CALIBRE_USERDB ? 1 : 0;
 my $JSON = JSON::MaybeXS->new->utf8(1);
 my %COVER_VARIANTS = (
     thumb  => { size => '240x360', quality => 75 },
     medium => { size => '640x960', quality => 80 },
 );
 my $EREADER_UA_RE = qr/(?:kindle|kobo|pocketbook|boox|onyx|eink|e-ink|ereader)/i;
+my $CALIBRE_ROOT_REAL;
+
+sub _calibre_root_real {
+    return $CALIBRE_ROOT_REAL;
+}
+
+sub _is_within_calibre_root {
+    my ($real_path) = @_;
+    my $root = _calibre_root_real();
+    return 0 unless defined $real_path && defined $root;
+    return 1 if $real_path eq $root;
+    return index($real_path, $root . '/') == 0 ? 1 : 0;
+}
 
 sub _cover_variant_cache_file {
     my ($book_id, $variant) = @_;
@@ -53,7 +64,7 @@ sub _book_cover_file {
 
     my $cover = File::Spec->catfile(CALIBRE_ROOT, $book->{path}, 'cover.jpg');
     my $real_cover = abs_path($cover) or return;
-    return unless index($real_cover, CALIBRE_ROOT) == 0;
+    return unless _is_within_calibre_root($real_cover);
     return unless -f $real_cover;
 
     return $real_cover;
@@ -78,12 +89,11 @@ sub _ensure_cover_variant {
 }
 
 sub auth_enabled {
-    return $AUTH_ENABLED;
+    return CalibreServer::DB::has_user_db();
 }
 
 sub _request_auth_state {
     return 'public' unless auth_enabled();
-    return 'authenticated' if session('user');
     return 'authenticated' if _basic_auth_ok();
 
     return 'anonymous';
@@ -103,8 +113,6 @@ sub _is_ereader_user_agent {
 }
 
 sub _reader_view_active {
-    _apply_reader_view_preference();
-
     my $preference = session('reader_view') // q{};
     return 1 if $preference eq 'reader';
     return 0 if $preference eq 'normal';
@@ -130,6 +138,37 @@ sub _page_number {
     return $value > 0 ? $value : 1;
 }
 
+sub _secure_compare {
+    my ($left, $right) = @_;
+    return 0 unless defined $left && defined $right;
+
+    my $left_len = length($left);
+    my $right_len = length($right);
+    my $diff = $left_len ^ $right_len;
+    my $max = $left_len > $right_len ? $left_len : $right_len;
+
+    for (my $i = 0; $i < $max; $i++) {
+        my $a = $i < $left_len ? ord(substr($left, $i, 1)) : 0;
+        my $b = $i < $right_len ? ord(substr($right, $i, 1)) : 0;
+        $diff |= ($a ^ $b);
+    }
+
+    return $diff == 0 ? 1 : 0;
+}
+
+sub _readonly_flag_valid {
+    my ($readonly) = @_;
+    return defined $readonly && ($readonly eq 'y' || $readonly eq 'n') ? 1 : 0;
+}
+
+sub _authenticate_user {
+    my ($user, $password) = @_;
+    my $user_row = CalibreServer::DB::user_by_name($user) or return;
+    return unless _readonly_flag_valid($user_row->{readonly});
+    return unless _secure_compare($user_row->{pw}, $password);
+    return $user_row;
+}
+
 sub _basic_auth_ok {
     return 1 unless auth_enabled();
 
@@ -140,20 +179,33 @@ sub _basic_auth_ok {
     my ($user, $password) = split /:/, $decoded, 2;
     return 0 unless defined $user && defined $password;
 
-    my $user_row = CalibreServer::DB::user_by_name($user) or return 0;
-    return 0 unless $user_row->{pw} eq $password;
-    return 0 unless defined $user_row->{readonly} && ($user_row->{readonly} eq 'y' || $user_row->{readonly} eq 'n');
-
-    return 1;
+    return _authenticate_user($user, $password) ? 1 : 0;
 }
 
 sub _require_basic_auth {
-    return 1 unless auth_enabled();
-    return 1 if _basic_auth_ok();
+    return if !auth_enabled();
+    return if _basic_auth_ok();
 
     status 401;
     response_header 'WWW-Authenticate' => 'Basic realm="Calibre Perl Server"';
     return 'Authentication required';
+}
+
+sub _opds_v1_search_template {
+    return '/opds/v1/search?query={query}';
+}
+
+sub _opds_v2_search_template {
+    return '/opds/v2/search?query={query}';
+}
+
+sub _content_disposition_filename {
+    my ($name) = @_;
+    my $ascii_name = $name;
+    $ascii_name =~ s/[^\x20-\x7E]/_/g;
+    $ascii_name =~ s/["\\]/_/g;
+    my $encoded_name = uri_escape_utf8($name);
+    return qq{attachment; filename="$ascii_name"; filename*=UTF-8''$encoded_name};
 }
 
 sub _book_acquisition_links {
@@ -177,7 +229,7 @@ sub _opds_v1_feed {
     my ($title, $self_href, $books, $search_href) = @_;
     my $xml = '';
     open my $fh, '>', \$xml or die "cannot open scalar fh: $!\n";
-    my $w = XML::Writer->new(OUTPUT => $fh, ENCODING => 'utf-8', DATA_INDENT => 2, NAMESPACES => 1);
+    my $w = XML::Writer->new(OUTPUT => $fh, ENCODING => 'utf-8', DATA_INDENT => 2, NAMESPACES => 0);
     $w->xmlDecl('utf-8');
     $w->startTag('feed', xmlns => 'http://www.w3.org/2005/Atom', 'xmlns:opds' => 'http://opds-spec.org/2010/catalog');
     $w->dataElement('title', $title);
@@ -234,21 +286,14 @@ sub _opds_v2_feed {
     return $JSON->encode($payload);
 }
 
-sub _is_public_path {
-    my ($path) = @_;
-
-    return 1 if grep { $_ eq $path } qw(/login /logout /favicon.ico /__auth_state);
-    return 1 if $path =~ m{^/opds/v[12](?:/|$)};
-    return 1 if $path =~ m{^/css(?:/|$)};
-
-    return 0;
-}
-
 sub _validate_calibre_library {
     die "missing Calibre library root: " . CALIBRE_ROOT . "\n" unless -d CALIBRE_ROOT;
     die "Calibre library root is not readable: " . CALIBRE_ROOT . "\n" unless -r CALIBRE_ROOT;
     die "missing Calibre metadata database: " . CALIBRE_DB . "\n" unless -f CALIBRE_DB;
     die "Calibre metadata database is not readable: " . CALIBRE_DB . "\n" unless -r CALIBRE_DB;
+
+    $CALIBRE_ROOT_REAL = abs_path(CALIBRE_ROOT)
+        or die "cannot resolve Calibre library root: " . CALIBRE_ROOT . "\n";
 }
 
 _validate_calibre_library();
@@ -261,18 +306,9 @@ hook before_template_render => sub {
 
 hook before => sub {
     _apply_reader_view_preference();
-
-    return unless auth_enabled();
-    return if session('user');
-    return if _is_public_path(request->path_info);
-
-    return redirect uri_for('/login', { return_url => request->path_info });
-};
-
-get '/login' => sub {
-    return redirect '/' unless auth_enabled();
-
-    return template 'login' => { title => 'Login', return_url => params->{return_url} || '/', error => '' };
+    if (my $auth_error = _require_basic_auth()) {
+        return $auth_error;
+    }
 };
 
 any [ 'get', 'head' ] => '/__auth_state' => sub {
@@ -280,28 +316,6 @@ any [ 'get', 'head' ] => '/__auth_state' => sub {
     response_header 'X-Auth-State' => _request_auth_state();
     response_header 'X-Reader-Mode' => _reader_view_active() ? 'reader' : 'normal';
     return q{};
-};
-
-post '/login' => sub {
-    return redirect '/' unless auth_enabled();
-
-    my $user = params->{user} // '';
-    my $password = params->{password} // '';
-    my $return_url = params->{return_url} || '/';
-    my $user_row = CalibreServer::DB::user_by_name($user);
-
-    if ($user_row && $user_row->{pw} eq $password && defined $user_row->{readonly} && ($user_row->{readonly} eq 'y' || $user_row->{readonly} eq 'n')) {
-        session user => $user;
-        session readonly => $user_row->{readonly};
-        return redirect $return_url;
-    }
-
-    return template 'login' => { title => 'Login', return_url => $return_url, error => 'invalid username or password' };
-};
-
-post '/logout' => sub {
-    session->destroy;
-    return redirect '/';
 };
 
 get '/' => sub {
@@ -411,79 +425,95 @@ get '/download/:id/:format' => sub {
 
     my $file = File::Spec->catfile(CALIBRE_ROOT, $book->{path}, $download_name);
     my $real_file = abs_path($file) or pass;
-    return pass unless index($real_file, CALIBRE_ROOT) == 0;
+    return pass unless _is_within_calibre_root($real_file);
     return pass unless -f $real_file;
 
-    response_header 'Content-Disposition' => qq{attachment; filename="$download_name"};
+    response_header 'Content-Disposition' => _content_disposition_filename($download_name);
     return send_file($real_file, system_path => 1, content_type => _mime_for_format($data_row->{format}));
 };
 
 get '/opds/v1' => sub {
-    return _require_basic_auth();
+    if (my $auth_error = _require_basic_auth()) {
+        return $auth_error;
+    }
     my $books = [ map { { %$_, formats => CalibreServer::DB::formats_for_book($_->{id}) } } @{ CalibreServer::DB::recent_books(20) } ];
-    my $xml = _opds_v1_feed('Calibre Perl Server', uri_for('/opds/v1'), $books, uri_for('/opds/v1/search?query={query}'));
+    my $xml = _opds_v1_feed('Calibre Perl Server', uri_for('/opds/v1'), $books, _opds_v1_search_template());
     content_type 'application/atom+xml;profile=opds-catalog';
     return $xml;
 };
 
 get '/opds/v1/recent' => sub {
-    return _require_basic_auth();
+    if (my $auth_error = _require_basic_auth()) {
+        return $auth_error;
+    }
     my $books = [ map { { %$_, formats => CalibreServer::DB::formats_for_book($_->{id}) } } @{ CalibreServer::DB::recent_books(20) } ];
-    my $xml = _opds_v1_feed('Recent Books', uri_for('/opds/v1/recent'), $books, uri_for('/opds/v1/search?query={query}'));
+    my $xml = _opds_v1_feed('Recent Books', uri_for('/opds/v1/recent'), $books, _opds_v1_search_template());
     content_type 'application/atom+xml;profile=opds-catalog';
     return $xml;
 };
 
 get '/opds/v1/search' => sub {
-    return _require_basic_auth();
+    if (my $auth_error = _require_basic_auth()) {
+        return $auth_error;
+    }
     my $query = params->{query} // q{};
     my $books = $query eq q{} ? [] : [ map { { %$_, formats => CalibreServer::DB::formats_for_book($_->{id}) } } @{ CalibreServer::DB::search_books($query, 20, 0) } ];
     pop @$books if @$books > 20;
-    my $xml = _opds_v1_feed("Search: $query", uri_for('/opds/v1/search?query=' . $query), $books, uri_for('/opds/v1/search?query={query}'));
+    my $xml = _opds_v1_feed("Search: $query", uri_for('/opds/v1/search', { query => $query }), $books, _opds_v1_search_template());
     content_type 'application/atom+xml;profile=opds-catalog';
     return $xml;
 };
 
 get '/opds/v1/book/:id' => sub {
-    return _require_basic_auth();
+    if (my $auth_error = _require_basic_auth()) {
+        return $auth_error;
+    }
     my $book_id = route_parameters->get('id');
     my $book = CalibreServer::DB::book_by_id($book_id) or pass;
     my $formats = CalibreServer::DB::formats_for_book($book_id);
-    my $xml = _opds_v1_feed($book->{title}, uri_for("/opds/v1/book/$book_id"), [ { %$book, formats => $formats } ], uri_for('/opds/v1/search?query={query}'));
+    my $xml = _opds_v1_feed($book->{title}, uri_for("/opds/v1/book/$book_id"), [ { %$book, formats => $formats } ], _opds_v1_search_template());
     content_type 'application/atom+xml;profile=opds-catalog';
     return $xml;
 };
 
 get '/opds/v2' => sub {
-    return _require_basic_auth();
+    if (my $auth_error = _require_basic_auth()) {
+        return $auth_error;
+    }
     my $books = [ map { { %$_, formats => CalibreServer::DB::formats_for_book($_->{id}) } } @{ CalibreServer::DB::recent_books(20) } ];
     content_type 'application/opds+json';
-    return _opds_v2_feed('Calibre Perl Server', uri_for('/opds/v2'), $books, uri_for('/opds/v2/search?query={query}'));
+    return _opds_v2_feed('Calibre Perl Server', uri_for('/opds/v2'), $books, _opds_v2_search_template());
 };
 
 get '/opds/v2/recent' => sub {
-    return _require_basic_auth();
+    if (my $auth_error = _require_basic_auth()) {
+        return $auth_error;
+    }
     my $books = [ map { { %$_, formats => CalibreServer::DB::formats_for_book($_->{id}) } } @{ CalibreServer::DB::recent_books(20) } ];
     content_type 'application/opds+json';
-    return _opds_v2_feed('Recent Books', uri_for('/opds/v2/recent'), $books, uri_for('/opds/v2/search?query={query}'));
+    return _opds_v2_feed('Recent Books', uri_for('/opds/v2/recent'), $books, _opds_v2_search_template());
 };
 
 get '/opds/v2/search' => sub {
-    return _require_basic_auth();
+    if (my $auth_error = _require_basic_auth()) {
+        return $auth_error;
+    }
     my $query = params->{query} // q{};
     my $books = $query eq q{} ? [] : [ map { { %$_, formats => CalibreServer::DB::formats_for_book($_->{id}) } } @{ CalibreServer::DB::search_books($query, 20, 0) } ];
     pop @$books if @$books > 20;
     content_type 'application/opds+json';
-    return _opds_v2_feed("Search: $query", uri_for('/opds/v2/search?query=' . $query), $books, uri_for('/opds/v2/search?query={query}'));
+    return _opds_v2_feed("Search: $query", uri_for('/opds/v2/search', { query => $query }), $books, _opds_v2_search_template());
 };
 
 get '/opds/v2/book/:id' => sub {
-    return _require_basic_auth();
+    if (my $auth_error = _require_basic_auth()) {
+        return $auth_error;
+    }
     my $book_id = route_parameters->get('id');
     my $book = CalibreServer::DB::book_by_id($book_id) or pass;
     my $formats = CalibreServer::DB::formats_for_book($book_id);
     content_type 'application/opds+json';
-    return _opds_v2_feed($book->{title}, uri_for("/opds/v2/book/$book_id"), [ { %$book, formats => $formats } ], uri_for('/opds/v2/search?query={query}'));
+    return _opds_v2_feed($book->{title}, uri_for("/opds/v2/book/$book_id"), [ { %$book, formats => $formats } ], _opds_v2_search_template());
 };
 
 true;

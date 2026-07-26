@@ -38,14 +38,6 @@
       return false;
     }
 
-    if (url.pathname === '/login') {
-      return false;
-    }
-
-    if (url.pathname === '/logout') {
-      return false;
-    }
-
     const extensionMatch = url.pathname.match(/\.([a-z0-9]+)$/i);
     if (extensionMatch) {
       return false;
@@ -248,7 +240,7 @@
           return cachedHtml;
         }
 
-        return fetch(cacheKey, {
+        return fetch(url.toString(), {
           credentials: 'same-origin',
           headers: {
             'X-Requested-With': 'prefetch',

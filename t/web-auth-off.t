@@ -5,7 +5,7 @@ use Test::More;
 
 use Plack::Test;
 
-use HTTP::Request::Common qw(GET POST);
+use HTTP::Request::Common qw(GET);
 
 use lib 't/lib';
 use TestFixture qw(fixture_env);

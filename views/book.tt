@@ -43,7 +43,7 @@
   <section>
     <h2>Description</h2>
     <div class="book-detail-description">
-      [% book.comment %]
+      [% book.comment | html %]
     </div>
   </section>
 [% END %]
