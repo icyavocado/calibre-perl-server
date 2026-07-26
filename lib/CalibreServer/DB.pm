@@ -186,7 +186,8 @@ sub search_books {
     $limit  ||= 10;
     $offset ||= 0;
 
-    my $like = '%' . lc($query // q{}) . '%';
+    my $query_lc = lc($query // q{});
+    my $like = '%' . $query_lc . '%';
 
     my $author_sort_expr = _books_has_author_sort()
         ? 'books.author_sort'
@@ -200,7 +201,28 @@ sub search_books {
                 $author_sort_expr AS author_sort,
                 books.has_cover,
                 books.timestamp,
-                COALESCE(GROUP_CONCAT(DISTINCT REPLACE(authors.name, '|', ', ')), '') AS authors
+                COALESCE(GROUP_CONCAT(DISTINCT REPLACE(authors.name, '|', ', ')), '') AS authors,
+                CASE
+                    WHEN lower(books.title) = ? THEN 0
+                    WHEN lower(books.title) LIKE ? || ' %' THEN 1
+                    WHEN lower(books.title) LIKE '% ' || ? || ' %'
+                      OR lower(books.title) LIKE '% ' || ? THEN 2
+                    WHEN lower(books.title) LIKE '%' || ? || '%' THEN 3
+                    WHEN lower(COALESCE(authors.name, '')) LIKE '%' || ? || '%' THEN 4
+                    ELSE 5
+                END AS rank,
+                CASE
+                    WHEN lower(books.title) = ? THEN 'Exact Title'
+                    WHEN lower(books.title) LIKE ? || ' %' THEN 'Title'
+                    WHEN lower(books.title) LIKE '% ' || ? || ' %'
+                      OR lower(books.title) LIKE '% ' || ? THEN 'Title'
+                    WHEN lower(books.title) LIKE '%' || ? || '%' THEN 'Title'
+                    WHEN lower(COALESCE(authors.name, '')) LIKE '%' || ? || '%' THEN 'Author'
+                    WHEN lower(COALESCE(tags.name, '')) LIKE '%' || ? || '%' THEN 'Tag'
+                    WHEN lower(COALESCE(series.name, '')) LIKE '%' || ? || '%' THEN 'Series'
+                    WHEN lower(COALESCE(comments.text, '')) LIKE '%' || ? || '%' THEN 'Description'
+                    ELSE 'Unknown'
+                END AS match_reason
             FROM books
             LEFT JOIN books_authors_link ON books.id = books_authors_link.book
             LEFT JOIN authors ON authors.id = books_authors_link.author
@@ -215,11 +237,15 @@ sub search_books {
                OR lower(COALESCE(comments.text, '')) LIKE ?
                OR lower(COALESCE(series.name, '')) LIKE ?
             GROUP BY books.id
-            ORDER BY books.timestamp DESC, books.id DESC
+            ORDER BY rank ASC, books.timestamp DESC, books.id DESC
             LIMIT ? OFFSET ?
         },
         { Slice => {} },
-        $like, $like, $like, $like, $like, $limit + 1, $offset,
+        $query_lc, $query_lc, $query_lc, $query_lc, $query_lc, $query_lc,
+        $query_lc, $query_lc, $query_lc, $query_lc, $query_lc,
+        $query_lc, $query_lc, $query_lc, $query_lc,
+        $like, $like, $like, $like, $like,
+        $limit + 1, $offset,
     );
 
     $_->{title} = _display_title($_->{title}, $_->{author_sort}) for @$rows;

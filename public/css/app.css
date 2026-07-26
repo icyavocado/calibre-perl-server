@@ -39,6 +39,13 @@
   text-overflow: ellipsis;
 }
 
+.search-match-reason {
+  color: var(--pico-muted-color);
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
 .book-card-cover-placeholder {
   background: #dbeafe;
   display: grid;

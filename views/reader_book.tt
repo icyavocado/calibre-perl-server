@@ -8,6 +8,9 @@
   </div>
   <div class="reader-book-meta">
     <span class="reader-book-title">[% book.title | html %]</span>
+[% IF book.match_reason %]
+    <p class="reader-match-reason">[ [% book.match_reason | html %] Matched ]</p>
+[% END %]
     <p class="reader-book-author">[% book.authors | html %]</p>
 [% IF book.formats.size %]
     <p>

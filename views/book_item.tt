@@ -11,6 +11,9 @@
   </a>
   <header>
     <a class="book-card-title" href="/book/[% book.id %]" title="[% book.title | html %]">[% book.title | html %]</a>
+[% IF book.match_reason %]
+    <span class="search-match-reason">[ [% book.match_reason | html %] Matched ]</span>
+[% END %]
   </header>
   <p>[% book.authors | html %]</p>
 </article>

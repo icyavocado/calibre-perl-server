@@ -140,6 +140,12 @@
       margin: 0 0 10px;
     }
 
+    .reader-match-reason {
+      color: #666;
+      font-size: 15px;
+      margin: 0 0 6px;
+    }
+
     .reader-format-link {
       background: #f8f8f8;
       border: 1px solid #666;

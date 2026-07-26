@@ -1,12 +1,13 @@
 <header>
   <h1>Calibre Perl Server</h1>
   <p>Browse the library or search the catalog.</p>
-  <p><a href="/?view=reader">View library from e-reader</a></p>
+  <p><a href="[% view_switch_url %]">View library from e-reader</a></p>
 </header>
 
 <form method="get" action="/search">
   <label for="search-query">Search the library</label>
   <input id="search-query" type="search" name="q" value="" placeholder="Title, author, tag, series">
+  <input type="hidden" name="view" value="normal">
   <button type="submit">Search</button>
 </form>
 
@@ -36,12 +37,12 @@
   <nav aria-label="Library pages">
     <div class="grid">
     [% IF has_prev %]
-      <a href="/?page=[% page - 1 %]">Previous page</a>
+      <a href="/?page=[% page - 1 %]&view=normal">Previous page</a>
     [% ELSE %]
       <span>At the first page</span>
     [% END %]
     [% IF has_next %]
-      <a href="/?page=[% page + 1 %]">Next page</a>
+      <a href="/?page=[% page + 1 %]&view=normal">Next page</a>
     [% ELSE %]
       <span>No more pages</span>
     [% END %]

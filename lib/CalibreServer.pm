@@ -117,7 +117,9 @@ sub _reader_view_active {
     return 1 if $preference eq 'reader';
     return 0 if $preference eq 'normal';
 
-    return _is_ereader_user_agent();
+    my $mode = _is_ereader_user_agent() ? 'reader' : 'normal';
+    session reader_view => $mode;
+    return $mode eq 'reader' ? 1 : 0;
 }
 
 sub _with_formats {
@@ -335,6 +337,11 @@ get '/' => sub {
 
     my $template_name = $reader_mode ? 'index_reader' : 'index';
     my $template_options = $reader_mode ? { layout => 'reader' } : {};
+    my $switch_view = $reader_mode ? 'normal' : 'reader';
+    my $view_switch_url = uri_for('/', {
+        page => $page,
+        view => $switch_view,
+    });
 
     return template($template_name, {
         title        => 'Calibre Perl Server',
@@ -344,6 +351,7 @@ get '/' => sub {
         has_prev     => $page > 1 ? 1 : 0,
         has_next     => $has_next,
         auth_enabled => auth_enabled(),
+        view_switch_url => $view_switch_url,
     }, $template_options);
 };
 
@@ -361,6 +369,12 @@ get '/search' => sub {
 
     my $template_name = $reader_mode ? 'search_reader' : 'search';
     my $template_options = $reader_mode ? { layout => 'reader' } : {};
+    my $switch_view = $reader_mode ? 'normal' : 'reader';
+    my $view_switch_url = uri_for('/search', {
+        q    => $query,
+        page => $page,
+        view => $switch_view,
+    });
 
     return template($template_name, {
         title        => 'Search',
@@ -369,6 +383,7 @@ get '/search' => sub {
         has_prev     => $page > 1 ? 1 : 0,
         has_next     => $has_next,
         recent_books => $rows,
+        view_switch_url => $view_switch_url,
     }, $template_options);
 };
 

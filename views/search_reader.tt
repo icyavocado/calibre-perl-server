@@ -1,11 +1,12 @@
 <header class="reader-top">
   <h1>Search Library</h1>
-  <p><a href="/?view=normal">Switch to normal view</a></p>
+  <p><a href="[% view_switch_url %]">Switch to normal view</a></p>
 </header>
 
 <form class="reader-search" method="get" action="/search">
   <label for="search-query">Search books and authors</label>
   <input id="search-query" type="search" name="q" value="[% query | html %]" placeholder="Title, author, tag, series">
+  <input type="hidden" name="view" value="reader">
   <button type="submit">Search</button>
 </form>
 
@@ -34,12 +35,12 @@
 [% IF has_prev || has_next %]
   <nav class="reader-pages" aria-label="Search results pages">
     [% IF has_prev %]
-      <a class="reader-page-link" href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous page</a>
+      <a class="reader-page-link" href="/search?q=[% query | uri %]&page=[% page - 1 %]&view=reader">Previous page</a>
     [% ELSE %]
       <span class="reader-page-note">At the first page</span>
     [% END %]
     [% IF has_next %]
-      <a class="reader-page-link" href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next page</a>
+      <a class="reader-page-link" href="/search?q=[% query | uri %]&page=[% page + 1 %]&view=reader">Next page</a>
     [% ELSE %]
       <span class="reader-page-note">No more pages</span>
     [% END %]

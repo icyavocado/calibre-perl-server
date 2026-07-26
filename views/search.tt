@@ -1,6 +1,7 @@
 <header>
   <h1>Search</h1>
   <p>Search titles, authors, tags, comments, and series.</p>
+  <p><a href="[% view_switch_url %]">View search from e-reader</a></p>
 </header>
 
 [%# Keep the main query/result flow readable by moving secondary states into blocks. %]
@@ -26,6 +27,7 @@
   <label for="search-query">Search the library</label>
   <div class="grid">
     <input id="search-query" type="search" name="q" value="[% query | html %]" placeholder="Title, author, tag, series">
+    <input type="hidden" name="view" value="normal">
     <button type="submit">Search</button>
   </div>
 </form>
@@ -58,12 +60,12 @@
     </header>
     <div class="grid">
     [% IF has_prev %]
-      <a href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous page</a>
+    <a href="/search?q=[% query | uri %]&page=[% page - 1 %]&view=normal">Previous page</a>
     [% ELSE %]
       <span>At the first page</span>
     [% END %]
     [% IF has_next %]
-      <a href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next page</a>
+      <a href="/search?q=[% query | uri %]&page=[% page + 1 %]&view=normal">Next page</a>
     [% ELSE %]
       <span>No more pages</span>
     [% END %]
