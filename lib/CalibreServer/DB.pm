@@ -9,6 +9,7 @@ use constant CALIBRE_DB     => ($ENV{CALIBRE_DB} || '/calibre/metadata.db');
 use constant CALIBRE_USERDB => ($ENV{CALIBRE_USERDB} || '/calibre/users.sqlite');
 
 my %DBH;
+my $HAS_BOOKS_AUTHOR_SORT;
 
 sub _connect {
     my ($path) = @_;
@@ -69,15 +70,66 @@ sub validate_user_password {
     return $user->{pw} eq $password ? 1 : 0;
 }
 
+sub _name_key {
+    my ($value) = @_;
+    return q{} unless defined $value;
+
+    my $normalized = lc $value;
+    $normalized =~ s/[^a-z0-9]+/ /g;
+    $normalized =~ s/^\s+|\s+$//g;
+
+    return q{} if $normalized eq q{};
+
+    my @tokens = sort split /\s+/, $normalized;
+    return join q{ }, @tokens;
+}
+
+sub _display_title {
+    my ($title, $author_sort) = @_;
+    return $title unless defined $title;
+    return $title unless defined $author_sort && $author_sort =~ /\S/;
+
+    my $prefix = $author_sort . ' - ';
+    if (length($title) >= length($prefix) && lc(substr($title, 0, length($prefix))) eq lc($prefix)) {
+        my $trimmed = substr($title, length($prefix));
+        return $trimmed =~ /\S\S/ ? $trimmed : $title;
+    }
+
+    my ($head, $rest) = split / - /, $title, 2;
+    if (defined $rest && _name_key($head) ne q{} && _name_key($head) eq _name_key($author_sort)) {
+        return $rest =~ /\S\S/ ? $rest : $title;
+    }
+
+    return $title;
+}
+
+sub _books_has_author_sort {
+    return $HAS_BOOKS_AUTHOR_SORT if defined $HAS_BOOKS_AUTHOR_SORT;
+
+    my $cols = metadata_db()->selectall_arrayref(
+        q{PRAGMA table_info(books)},
+        { Slice => {} },
+    );
+    my %col = map { ($_->{name} => 1) } @$cols;
+    $HAS_BOOKS_AUTHOR_SORT = $col{author_sort} ? 1 : 0;
+
+    return $HAS_BOOKS_AUTHOR_SORT;
+}
+
 sub recent_books {
     my ($limit) = @_;
     $limit ||= 10;
 
-    return metadata_db()->selectall_arrayref(
-        q{
+    my $author_sort_expr = _books_has_author_sort()
+        ? 'books.author_sort'
+        : q{COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '')};
+
+    my $rows = metadata_db()->selectall_arrayref(
+        qq{
             SELECT
                 books.id,
                 books.title,
+                $author_sort_expr AS author_sort,
                 books.has_cover,
                 books.timestamp,
                 COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '') AS authors
@@ -91,6 +143,9 @@ sub recent_books {
         { Slice => {} },
         $limit,
     );
+
+    $_->{title} = _display_title($_->{title}, $_->{author_sort}) for @$rows;
+    return $rows;
 }
 
 sub all_books {
@@ -98,11 +153,16 @@ sub all_books {
     $limit  ||= 100;
     $offset ||= 0;
 
-    return metadata_db()->selectall_arrayref(
-        q{
+    my $author_sort_expr = _books_has_author_sort()
+        ? 'books.author_sort'
+        : q{COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '')};
+
+    my $rows = metadata_db()->selectall_arrayref(
+        qq{
             SELECT
                 books.id,
                 books.title,
+                $author_sort_expr AS author_sort,
                 books.has_cover,
                 books.timestamp,
                 COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '') AS authors
@@ -116,6 +176,9 @@ sub all_books {
         { Slice => {} },
         $limit + 1, $offset,
     );
+
+    $_->{title} = _display_title($_->{title}, $_->{author_sort}) for @$rows;
+    return $rows;
 }
 
 sub search_books {
@@ -125,11 +188,16 @@ sub search_books {
 
     my $like = '%' . lc($query // q{}) . '%';
 
-    return metadata_db()->selectall_arrayref(
-        q{
+    my $author_sort_expr = _books_has_author_sort()
+        ? 'books.author_sort'
+        : q{COALESCE(GROUP_CONCAT(DISTINCT REPLACE(authors.name, '|', ', ')), '')};
+
+    my $rows = metadata_db()->selectall_arrayref(
+        qq{
             SELECT
                 books.id,
                 books.title,
+                $author_sort_expr AS author_sort,
                 books.has_cover,
                 books.timestamp,
                 COALESCE(GROUP_CONCAT(DISTINCT REPLACE(authors.name, '|', ', ')), '') AS authors
@@ -153,16 +221,24 @@ sub search_books {
         { Slice => {} },
         $like, $like, $like, $like, $like, $limit + 1, $offset,
     );
+
+    $_->{title} = _display_title($_->{title}, $_->{author_sort}) for @$rows;
+    return $rows;
 }
 
 sub book_by_id {
     my ($id) = @_;
 
-    return metadata_db()->selectrow_hashref(
-        q{
+    my $author_sort_expr = _books_has_author_sort()
+        ? 'books.author_sort'
+        : q{COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '')};
+
+    my $book = metadata_db()->selectrow_hashref(
+        qq{
             SELECT
                 books.id,
                 books.title,
+                $author_sort_expr AS author_sort,
                 books.path,
                 books.has_cover,
                 books.timestamp,
@@ -183,6 +259,10 @@ sub book_by_id {
         undef,
         $id,
     );
+
+    return undef unless $book;
+    $book->{title} = _display_title($book->{title}, $book->{author_sort});
+    return $book;
 }
 
 sub tags_for_book {

@@ -37,6 +37,8 @@ subtest 'auth enabled, not logged in' => sub {
         my $res_download = $cb->(GET '/download/1/EPUB');
         is($res_download->code, 401, 'GET /download returns 401');
 
+        unlike($res_home->decoded_content, qr{/book/\d+}, 'GET / body does not leak library links when unauthorized');
+
         my $res_login = $cb->(GET '/login');
         is($res_login->code, 404, 'GET /login route removed');
 

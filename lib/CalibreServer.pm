@@ -307,7 +307,7 @@ hook before_template_render => sub {
 hook before => sub {
     _apply_reader_view_preference();
     if (my $auth_error = _require_basic_auth()) {
-        return $auth_error;
+        halt($auth_error);
     }
 };
 
@@ -321,10 +321,10 @@ any [ 'get', 'head' ] => '/__auth_state' => sub {
 get '/' => sub {
     my $reader_mode = _reader_view_active();
     my $page = _page_number();
-    my $per_page = 100;
+    my $per_page = $reader_mode ? 20 : 100;
     my $offset = ($page - 1) * $per_page;
     my $books = CalibreServer::DB::all_books($per_page, $offset);
-    my $recent_books = CalibreServer::DB::recent_books(10);
+    my $recent_books = CalibreServer::DB::recent_books($reader_mode ? 5 : 10);
     my $has_next = @$books > $per_page ? 1 : 0;
     pop @$books if $has_next;
 
@@ -333,7 +333,10 @@ get '/' => sub {
         $books = _with_formats($books);
     }
 
-    return template($reader_mode ? 'index_reader' : 'index', {
+    my $template_name = $reader_mode ? 'index_reader' : 'index';
+    my $template_options = $reader_mode ? { layout => 'reader' } : {};
+
+    return template($template_name, {
         title        => 'Calibre Perl Server',
         recent_books => $recent_books,
         books        => $books,
@@ -341,14 +344,14 @@ get '/' => sub {
         has_prev     => $page > 1 ? 1 : 0,
         has_next     => $has_next,
         auth_enabled => auth_enabled(),
-    });
+    }, $template_options);
 };
 
 get '/search' => sub {
     my $reader_mode = _reader_view_active();
     my $query = params->{q} // q{};
     my $page = _page_number();
-    my $per_page = 10;
+    my $per_page = $reader_mode ? 20 : 10;
     my $offset = ($page - 1) * $per_page;
     my $rows = $query eq q{} ? [] : CalibreServer::DB::search_books($query, $per_page, $offset);
     my $has_next = @$rows > $per_page ? 1 : 0;
@@ -356,14 +359,17 @@ get '/search' => sub {
 
     $rows = _with_formats($rows) if $reader_mode;
 
-    return template($reader_mode ? 'search_reader' : 'search', {
+    my $template_name = $reader_mode ? 'search_reader' : 'search';
+    my $template_options = $reader_mode ? { layout => 'reader' } : {};
+
+    return template($template_name, {
         title        => 'Search',
         query        => $query,
         page         => $page,
         has_prev     => $page > 1 ? 1 : 0,
         has_next     => $has_next,
         recent_books => $rows,
-    });
+    }, $template_options);
 };
 
 get '/book/:id' => sub {

@@ -1,63 +1,47 @@
-<header>
-  <h1>Calibre Perl Server</h1>
-  <p><a href="/?view=normal">View normal site</a></p>
+<header class="reader-top">
+  <h1>Calibre Library</h1>
+  <p><a href="/?view=normal">Switch to normal view</a></p>
 </header>
 
-<form method="get" action="/search">
-  <label for="search-query">Search the library</label>
-  <input id="search-query" type="search" name="q" value="" placeholder="Title or author">
+<form class="reader-search" method="get" action="/search">
+  <label for="search-query">Search books and authors</label>
+  <input id="search-query" type="search" name="q" value="" placeholder="Title, author, tag, series">
   <button type="submit">Search</button>
 </form>
 
-[% BLOCK reader_book %]
-  <article>
-    <h3>[% book.title | html %]</h3>
-    <p>[% book.authors | html %]</p>
-  [% IF book.formats.size %]
-    <p>
-    [% FOREACH format IN book.formats %]
-      <a href="/download/[% book.id %]/[% format.format | uri %]">[% format.format | html %]</a>[% UNLESS loop.last %] | [% END %]
-    [% END %]
-    </p>
-  [% ELSE %]
-    <p>No downloads available.</p>
-  [% END %]
-  </article>
-[% END %]
-
-<section>
+<section class="reader-section">
   <h2>Recent Books</h2>
 [% IF recent_books.size %]
   [% FOREACH book IN recent_books %]
-    [% PROCESS reader_book book=book %]
+    [% INCLUDE reader_book.tt book=book %]
   [% END %]
 [% ELSE %]
-  <p>No recent books are available.</p>
+  <p class="reader-muted">No recent books are available.</p>
 [% END %]
 </section>
 
-<section>
+<section class="reader-section">
   <h2>Library</h2>
 [% IF books.size %]
-  <p>Page [% page %]</p>
+  <p class="reader-muted">Page [% page %]</p>
   [% FOREACH book IN books %]
-    [% PROCESS reader_book book=book %]
+    [% INCLUDE reader_book.tt book=book %]
   [% END %]
 [% IF has_prev || has_next %]
-  <nav aria-label="Library pages">
+  <nav class="reader-pages" aria-label="Library pages">
     [% IF has_prev %]
-      <a href="/?page=[% page - 1 %]">Previous page</a>
+      <a class="reader-page-link" href="/?page=[% page - 1 %]">Previous page</a>
     [% ELSE %]
-      <span>At the first page</span>
+      <span class="reader-page-note">At the first page</span>
     [% END %]
     [% IF has_next %]
-      <a href="/?page=[% page + 1 %]">Next page</a>
+      <a class="reader-page-link" href="/?page=[% page + 1 %]">Next page</a>
     [% ELSE %]
-      <span>No more pages</span>
+      <span class="reader-page-note">No more pages</span>
     [% END %]
   </nav>
 [% END %]
 [% ELSE %]
-  <p>No books are available.</p>
+  <p class="reader-muted">No books are available.</p>
 [% END %]
 </section>

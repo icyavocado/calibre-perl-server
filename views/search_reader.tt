@@ -1,63 +1,47 @@
-<header>
-  <h1>Search</h1>
-  <p><a href="/?view=normal">View normal site</a></p>
+<header class="reader-top">
+  <h1>Search Library</h1>
+  <p><a href="/?view=normal">Switch to normal view</a></p>
 </header>
 
-<form method="get" action="/search">
-  <label for="search-query">Search the library</label>
-  <input id="search-query" type="search" name="q" value="[% query | html %]" placeholder="Title or author">
+<form class="reader-search" method="get" action="/search">
+  <label for="search-query">Search books and authors</label>
+  <input id="search-query" type="search" name="q" value="[% query | html %]" placeholder="Title, author, tag, series">
   <button type="submit">Search</button>
 </form>
 
-[% BLOCK reader_book %]
-  <article>
-    <h3>[% book.title | html %]</h3>
-    <p>[% book.authors | html %]</p>
-  [% IF book.formats.size %]
-    <p>
-    [% FOREACH format IN book.formats %]
-      <a href="/download/[% book.id %]/[% format.format | uri %]">[% format.format | html %]</a>[% UNLESS loop.last %] | [% END %]
-    [% END %]
-    </p>
-  [% ELSE %]
-    <p>No downloads available.</p>
-  [% END %]
-  </article>
-[% END %]
-
 [% IF query %]
   [% IF recent_books.size %]
-  <section>
+  <section class="reader-section">
     <h2>Results for "[% query | html %]"</h2>
-    <p>Page [% page %]</p>
+    <p class="reader-muted">Page [% page %]</p>
     [% FOREACH book IN recent_books %]
-      [% PROCESS reader_book book=book %]
+      [% INCLUDE reader_book.tt book=book %]
     [% END %]
   </section>
   [% ELSE %]
-  <section>
+  <section class="reader-section">
     <h2>No results for "[% query | html %]"</h2>
-    <p>Try a title, author, tag, comment, or series name.</p>
+    <p class="reader-muted">Try a title, author, tag, comment, or series name.</p>
   </section>
   [% END %]
 [% ELSE %]
-  <section>
+  <section class="reader-section">
     <h2>Start a search</h2>
-    <p>Enter a title, author, tag, comment, or series name.</p>
+    <p class="reader-muted">Enter a title, author, tag, comment, or series name.</p>
   </section>
 [% END %]
 
 [% IF has_prev || has_next %]
-  <nav aria-label="Search results pages">
+  <nav class="reader-pages" aria-label="Search results pages">
     [% IF has_prev %]
-      <a href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous page</a>
+      <a class="reader-page-link" href="/search?q=[% query | uri %]&page=[% page - 1 %]">Previous page</a>
     [% ELSE %]
-      <span>At the first page</span>
+      <span class="reader-page-note">At the first page</span>
     [% END %]
     [% IF has_next %]
-      <a href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next page</a>
+      <a class="reader-page-link" href="/search?q=[% query | uri %]&page=[% page + 1 %]">Next page</a>
     [% ELSE %]
-      <span>No more pages</span>
+      <span class="reader-page-note">No more pages</span>
     [% END %]
   </nav>
 [% END %]

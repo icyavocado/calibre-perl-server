@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>[% title || 'Calibre Perl Server' %]</title>
+  <style>
+    body {
+      background: #fff;
+      color: #111;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      line-height: 1.45;
+      margin: 0;
+      padding: 0;
+    }
+
+    a {
+      color: #111;
+      text-decoration: underline;
+    }
+
+    .reader-shell {
+      margin: 0 auto;
+      max-width: 780px;
+      padding: 16px 14px 40px;
+    }
+
+    .reader-top {
+      border-bottom: 2px solid #ccc;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+    }
+
+    .reader-top h1 {
+      font-size: 32px;
+      line-height: 1.1;
+      margin: 0 0 8px;
+    }
+
+    .reader-top p {
+      color: #555;
+      margin: 0;
+    }
+
+    .reader-search {
+      border: 1px solid #ccc;
+      margin-bottom: 18px;
+      padding: 12px;
+    }
+
+    .reader-search label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .reader-search input {
+      border: 1px solid #888;
+      box-sizing: border-box;
+      font-size: 18px;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      min-height: 44px;
+      padding: 8px;
+      width: 100%;
+    }
+
+    .reader-search button {
+      background: #f6f6f6;
+      border: 1px solid #666;
+      font-size: 18px;
+      line-height: 1.2;
+      min-height: 44px;
+      min-width: 120px;
+      padding: 8px 12px;
+    }
+
+    .reader-section {
+      margin-bottom: 20px;
+    }
+
+    .reader-section h2 {
+      border-bottom: 2px solid #d6d6d6;
+      font-size: 24px;
+      line-height: 1.2;
+      margin: 0 0 10px;
+      padding-bottom: 8px;
+    }
+
+    .reader-muted {
+      color: #555;
+      margin: 0 0 10px;
+    }
+
+    .reader-book {
+      border-bottom: 1px solid #d9d9d9;
+      margin: 0;
+      padding: 10px 0;
+    }
+
+    .reader-book-cover {
+      float: left;
+      margin: 0 12px 8px 0;
+      width: 90px;
+    }
+
+    .reader-book-cover img,
+    .reader-book-cover-placeholder {
+      border: 1px solid #bcbcbc;
+      display: block;
+      height: 135px;
+      width: 90px;
+    }
+
+    .reader-book-cover-placeholder {
+      background: #f3f3f3;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.2;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .reader-book-meta {
+      overflow: hidden;
+    }
+
+    .reader-book-title {
+      display: block;
+      font-size: 22px;
+      font-weight: bold;
+      line-height: 1.2;
+      margin-bottom: 6px;
+      text-decoration: none;
+    }
+
+    .reader-book-author {
+      color: #555;
+      margin: 0 0 10px;
+    }
+
+    .reader-format-link {
+      background: #f8f8f8;
+      border: 1px solid #666;
+      display: inline-block;
+      font-size: 16px;
+      font-weight: bold;
+      line-height: 1.2;
+      margin: 0 8px 8px 0;
+      min-height: 42px;
+      min-width: 70px;
+      padding: 10px 12px;
+      text-align: center;
+      text-decoration: none;
+      vertical-align: middle;
+    }
+
+    .reader-empty {
+      color: #666;
+      margin: 0;
+    }
+
+    .reader-book:after,
+    .reader-pages:after {
+      clear: both;
+      content: "";
+      display: block;
+    }
+
+    .reader-pages {
+      margin-top: 14px;
+    }
+
+    .reader-page-link,
+    .reader-page-note {
+      border: 1px solid #666;
+      box-sizing: border-box;
+      display: block;
+      font-size: 18px;
+      line-height: 1.2;
+      margin: 0 0 8px;
+      min-height: 46px;
+      padding: 12px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .reader-page-link {
+      background: #f8f8f8;
+      text-decoration: none;
+    }
+
+    .reader-page-note {
+      background: #fbfbfb;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <main class="reader-shell">
+[% content %]
+  </main>
+</body>
+</html>

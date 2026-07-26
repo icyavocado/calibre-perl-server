@@ -1,0 +1,22 @@
+<article class="reader-book">
+  <div class="reader-book-cover">
+[% IF book.has_cover %]
+    <img src="/cover/[% book.id %]/thumb" alt="Cover for [% book.title | html %]" width="90" height="135" loading="lazy" decoding="async">
+[% ELSE %]
+    <div class="reader-book-cover-placeholder">No cover</div>
+[% END %]
+  </div>
+  <div class="reader-book-meta">
+    <span class="reader-book-title">[% book.title | html %]</span>
+    <p class="reader-book-author">[% book.authors | html %]</p>
+[% IF book.formats.size %]
+    <p>
+  [% FOREACH format IN book.formats %]
+      <a class="reader-format-link" href="/download/[% book.id %]/[% format.format | uri %]">[% format.format | html %]</a>
+  [% END %]
+    </p>
+[% ELSE %]
+    <p class="reader-empty">No downloads available.</p>
+[% END %]
+  </div>
+</article>
