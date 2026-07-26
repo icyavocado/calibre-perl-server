@@ -337,11 +337,13 @@ get '/' => sub {
     my $offset = ($page - 1) * $per_page;
     my $books = CalibreServer::DB::all_books($per_page, $offset);
     my $recent_books = CalibreServer::DB::recent_books($reader_mode ? 5 : 10);
+    my $random_books = CalibreServer::DB::random_books(10);
     my $has_next = @$books > $per_page ? 1 : 0;
     pop @$books if $has_next;
 
     if ($reader_mode) {
         $recent_books = _with_formats($recent_books);
+        $random_books = _with_formats($random_books);
         $books = _with_formats($books);
     }
 
@@ -356,6 +358,7 @@ get '/' => sub {
     return template($template_name, {
         title        => 'Calibre Perl Server',
         recent_books => $recent_books,
+        random_books => $random_books,
         books        => $books,
         page         => $page,
         has_prev     => $page > 1 ? 1 : 0,

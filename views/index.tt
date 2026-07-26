@@ -12,6 +12,19 @@
 </form>
 
 <section>
+  <h2>Random Books</h2>
+[% IF random_books.size %]
+  <div class="book-grid">
+  [% FOREACH book IN random_books %]
+    [% INCLUDE book_item.tt book=book %]
+  [% END %]
+  </div>
+[% ELSE %]
+  <p>No books are available.</p>
+[% END %]
+</section>
+
+<section>
   <h2>Recent Books</h2>
 [% IF recent_books.size %]
   <div class="book-grid">

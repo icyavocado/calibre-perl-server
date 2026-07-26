@@ -11,6 +11,17 @@
 </form>
 
 <section class="reader-section">
+  <h2>Random Books</h2>
+[% IF random_books.size %]
+  [% FOREACH book IN random_books %]
+    [% INCLUDE reader_book.tt book=book %]
+  [% END %]
+[% ELSE %]
+  <p class="reader-muted">No books are available.</p>
+[% END %]
+</section>
+
+<section class="reader-section">
   <h2>Recent Books</h2>
 [% IF recent_books.size %]
   [% FOREACH book IN recent_books %]

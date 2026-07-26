@@ -148,6 +148,38 @@ sub recent_books {
     return $rows;
 }
 
+sub random_books {
+    my ($limit) = @_;
+    $limit ||= 10;
+
+    my $author_sort_expr = _books_has_author_sort()
+        ? 'books.author_sort'
+        : q{COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '')};
+
+    my $rows = metadata_db()->selectall_arrayref(
+        qq{
+            SELECT
+                books.id,
+                books.title,
+                $author_sort_expr AS author_sort,
+                books.has_cover,
+                books.timestamp,
+                COALESCE(GROUP_CONCAT(REPLACE(authors.name, '|', ', '), ', '), '') AS authors
+            FROM books
+            LEFT JOIN books_authors_link ON books.id = books_authors_link.book
+            LEFT JOIN authors ON authors.id = books_authors_link.author
+            GROUP BY books.id
+            ORDER BY RANDOM()
+            LIMIT ?
+        },
+        { Slice => {} },
+        $limit,
+    );
+
+    $_->{title} = _display_title($_->{title}, $_->{author_sort}) for @$rows;
+    return $rows;
+}
+
 sub all_books {
     my ($limit, $offset) = @_;
     $limit  ||= 100;

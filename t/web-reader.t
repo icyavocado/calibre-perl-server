@@ -21,6 +21,8 @@ subtest 'reader mode' => sub {
         my $normal_res = $cb->(GET '/');
         is($normal_res->code, 200, 'GET / returns 200');
         like($normal_res->decoded_content, qr/View library from e-reader/, 'normal page has reader link');
+        like($normal_res->decoded_content, qr/Random Books/, 'normal page has random books section');
+        like($normal_res->decoded_content, qr/Random Books.*Recent Books/s, 'normal page puts random books first');
         like($normal_res->decoded_content, qr{href="/">Homepage}, 'normal page has homepage link');
         like($normal_res->decoded_content, qr/name="view" value="normal"/, 'normal search form preserves normal view');
         like($normal_res->decoded_content, qr{href="(?:https?://[^"/]+)?/\?page=1&view=reader"}, 'normal view switch preserves page');
@@ -28,6 +30,8 @@ subtest 'reader mode' => sub {
         my $reader_res = $cb->(GET '/?view=reader');
         is($reader_res->code, 200, 'GET /?view=reader returns 200');
         like($reader_res->decoded_content, qr/Recent Books/, 'reader page contains Recent Books');
+        like($reader_res->decoded_content, qr/Random Books/, 'reader page contains Random Books');
+        like($reader_res->decoded_content, qr/Random Books.*Recent Books/s, 'reader page puts random books first');
         like($reader_res->decoded_content, qr{No downloads available}, 'reader page renders format section state');
         like($reader_res->decoded_content, qr{reader-book-cover}, 'reader page renders cover slot markup');
         unlike($reader_res->decoded_content, qr{pico\.classless\.min\.css}, 'reader page does not load pico css');
