@@ -6,4 +6,5 @@ services:
       - ./test/fixtures:/fixtures:ro
     environment:
       TEST_FIXTURES_ROOT: /fixtures
+      CPS_SESSION_SECRET: test-session-secret
     command: ["sh", "-c", "prove -Ilib -It/lib -r t/*.t"]

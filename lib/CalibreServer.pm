@@ -20,7 +20,17 @@ set views      => File::Spec->catdir($APP_ROOT, 'views');
 set public_dir => File::Spec->catdir($APP_ROOT, 'public');
 set charset    => 'UTF-8';
 
-set session => 'Simple';
+my $SESSION_SECRET = $ENV{CPS_SESSION_SECRET}
+    || die "CPS_SESSION_SECRET must be set for cookie sessions\n";
+
+set engines => {
+    session => {
+        Cookie => {
+            secret_key => $SESSION_SECRET,
+        },
+    },
+};
+set session => 'Cookie';
 
 use constant CALIBRE_ROOT => ($ENV{CALIBRE_ROOT} || '/calibre');
 use constant CALIBRE_DB    => ($ENV{CALIBRE_DB} || '/calibre/metadata.db');

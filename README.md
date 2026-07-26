@@ -100,3 +100,5 @@ When frontend CSS changes are not appearing due to browser cache, update `views/
 ## Runtime
 
 The app is served directly by Starman on port `5000` in Docker Compose.
+Set `CPS_SESSION_SECRET` to a stable, private value in production so reader-view preferences remain valid across restarts and cannot be forged.
+For example: `CPS_SESSION_SECRET='use-a-long-random-secret' docker compose up --build`.

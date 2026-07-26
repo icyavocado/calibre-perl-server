@@ -1,7 +1,7 @@
 <header>
   <h1>Calibre Perl Server</h1>
   <p>Browse the library or search the catalog.</p>
-  <p><a href="[% view_switch_url %]">View library from e-reader</a></p>
+  <p><a href="/">Homepage</a> | <a href="[% view_switch_url %]">View library from e-reader</a></p>
 </header>
 
 <form method="get" action="/search">

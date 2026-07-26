@@ -21,6 +21,7 @@ subtest 'reader mode' => sub {
         my $normal_res = $cb->(GET '/');
         is($normal_res->code, 200, 'GET / returns 200');
         like($normal_res->decoded_content, qr/View library from e-reader/, 'normal page has reader link');
+        like($normal_res->decoded_content, qr{href="/">Homepage}, 'normal page has homepage link');
         like($normal_res->decoded_content, qr/name="view" value="normal"/, 'normal search form preserves normal view');
         like($normal_res->decoded_content, qr{href="(?:https?://[^"/]+)?/\?page=1&view=reader"}, 'normal view switch preserves page');
 
@@ -40,11 +41,19 @@ subtest 'reader mode' => sub {
         $reader_again_req->header('Cookie' => $cookie_header) if $cookie_header;
         my $reader_again_res = $cb->($reader_again_req);
         like($reader_again_res->decoded_content, qr/Switch to normal view/, 'reader mode persists in session');
+        like($reader_again_res->decoded_content, qr{href="/">Homepage}, 'reader page has homepage link');
 
         my $normal_again_req = GET '/?view=normal';
         $normal_again_req->header('Cookie' => $cookie_header) if $cookie_header;
         my $normal_again_res = $cb->($normal_again_req);
         like($normal_again_res->decoded_content, qr/View library from e-reader/, 'normal mode can be restored');
+
+        my $normal_cookie_jar = request_cookies($normal_again_res);
+        my $normal_cookie_header = join '; ', map { "$_=$normal_cookie_jar->{$_}" } keys %$normal_cookie_jar;
+        my $homepage_req = GET '/';
+        $homepage_req->header('Cookie' => $normal_cookie_header) if $normal_cookie_header;
+        my $homepage_res = $cb->($homepage_req);
+        like($homepage_res->decoded_content, qr/View library from e-reader/, 'homepage uses normal mode from session');
 
         my $ua_req = GET '/';
         $ua_req->header('User-Agent' => 'Mozilla/5.0 Kindle');
@@ -65,6 +74,7 @@ subtest 'reader mode' => sub {
 
         my $normal_search_res = $cb->(GET '/search?view=normal&q=fixture');
         like($normal_search_res->decoded_content, qr/View search from e-reader/, 'normal search has reader switch');
+        like($normal_search_res->decoded_content, qr{href="/">Homepage}, 'normal search has homepage link');
         like($normal_search_res->decoded_content, qr{href="(?:https?://[^"/]+)?/search\?page=1&q=fixture&view=reader"}, 'normal search switch preserves query and page');
     };
 };

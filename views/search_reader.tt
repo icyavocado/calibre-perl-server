@@ -1,6 +1,6 @@
 <header class="reader-top">
   <h1>Search Library</h1>
-  <p><a href="[% view_switch_url %]">Switch to normal view</a></p>
+  <p><a href="/">Homepage</a> | <a href="[% view_switch_url %]">Switch to normal view</a></p>
 </header>
 
 <form class="reader-search" method="get" action="/search">

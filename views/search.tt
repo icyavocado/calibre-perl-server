@@ -1,7 +1,7 @@
 <header>
   <h1>Search</h1>
   <p>Search titles, authors, tags, comments, and series.</p>
-  <p><a href="[% view_switch_url %]">View search from e-reader</a></p>
+  <p><a href="/">Homepage</a> | <a href="[% view_switch_url %]">View search from e-reader</a></p>
 </header>
 
 [%# Keep the main query/result flow readable by moving secondary states into blocks. %]

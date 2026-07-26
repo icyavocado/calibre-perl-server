@@ -3,6 +3,8 @@ services:
     build: .
     ports:
       - "127.0.0.1:5000:5000"
+    environment:
+      CPS_SESSION_SECRET: ${CPS_SESSION_SECRET:?Set CPS_SESSION_SECRET before starting the server}
     volumes:
       - .:/app
       - /home/dai/CalibreLibrary:/calibre:ro
